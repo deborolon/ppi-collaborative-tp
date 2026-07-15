@@ -7,7 +7,7 @@ Todas las PR fueron fusionadas, dejando la rama principal con los aportes de tod
 
 ## Integrantes del equipo Grupo 5 - Caso "BurgerClick"
 - Débora Rolón – @deborolon
-- Melody Cordoba – @
+- Melody Cordoba – @melodyald
 - Morena Cisneros – @
 - Randall Roldan Jaramillo – @randall354ss
 - Tomás Rivas – @tomas-16a
