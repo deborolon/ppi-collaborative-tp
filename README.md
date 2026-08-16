@@ -50,7 +50,7 @@ Se han implementado las siguientes páginas navegables:
    Panel para el personal de cocina. Muestra las comandas activas con su estado (prioridad alta, en preparación, listo para retirar) y botones para marcar como "Marchar" o "Despachar". Incluye un aviso de stock de panceta.
 
 6. **Iniciar Sesión (`login.html`)**  
-   (Pendiente de desarrollo) Formulario de acceso para clientes o personal.
+    Formulario de acceso para clientes o personal.
 
 Todas las páginas están vinculadas mediante un menú de navegación común (`<nav>`).
 
