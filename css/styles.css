@@ -136,7 +136,7 @@ p {
 
 .btn:hover {
   background: var(--rojo-oscuro);
-  color: var(--blanco); /* Fuerza el texto a blanco en hover */
+  color: var(--blanco);
 }
 
 .btn-claro {
