@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BurgerClick - Cocina</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <img class="logo" src="../img/logo.svg" alt="Logo de BurgerClick">
+    <nav class="main-nav" aria-label="Navegación principal">
+      <ul>
+        <li><a href="../index.html">Inicio</a></li>
+        <li><a href="#">Menú</a></li>
+        <li><a href="#">Nuevo pedido</a></li>
+        <li><a href="#">Mis pedidos</a></li>
+        <li><a href="../pages/cocina.html" class="activo">Cocina</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="seccion">
+      <h1>Panel de cocina</h1>
+      <div class="aviso">
+        🟡 Aviso de stock: quedan pocas unidades de <strong>panceta</strong>. Avisar demoras si es necesario!
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Comandas activas</h2>
+      <div class="comandas">
+
+        <article class="comanda rojo">
+          <h3>#BC-1042 · Martina</h3>
+          <p><span class="estado estado-preparacion">Prioridad alta</span></p>
+          <ul>
+            <li>2× BurgerClick Clásica</li>
+            <li>1× Papas clásicas</li>
+            <li>2× Gaseosa 500 ml</li>
+          </ul>
+          <p><strong>Espera:</strong> 12 min</p>
+          <button type="button" class="btn btn-cocina btn-marchar">Marchar</button>
+          <button type="button" class="btn btn-cocina btn-despachar">Despachar</button>
+        </article>
+
+        <article class="comanda amarillo">
+          <h3>#BC-1043 · Lucas</h3>
+          <p><span class="estado estado-preparacion">En preparación</span></p>
+          <ul>
+            <li>1× BurgerClick Veggie</li>
+            <li>1× Papas cheddar &amp; panceta</li>
+          </ul>
+          <p><strong>Espera:</strong> 6 min</p>
+          <button type="button" class="btn btn-cocina btn-marchar">Marchar</button>
+          <button type="button" class="btn btn-cocina btn-despachar">Despachar</button>
+        </article>
+
+        <article class="comanda verde">
+          <h3>#BC-1044 · Sofía</h3>
+          <p><span class="estado estado-entregado">Listo para retirar</span></p>
+          <ul>
+            <li>1× BurgerClick Clásica</li>
+            <li>1× Agua saborizada</li>
+          </ul>
+          <p><strong>Espera:</strong> 1 min</p>
+          <button type="button" class="btn btn-cocina btn-despachar">Despachar</button>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Referencia de colores</h2>
+      <ul style="margin-left:1.2rem;">
+        <li>🔴 <strong>Rojo:</strong> pedido demorado -> prioridad alta.</li>
+        <li>🟡 <strong>Amarillo:</strong> en preparación -> dentro de tiempo.</li>
+        <li>🟢 <strong>Verde:</strong> listo para retirar -> despachar.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>BurgerClick &copy; 2026 — CABA, Argentina · Canal digital exclusivo del local.</p>
+  </footer>
+</body>
+</html>
