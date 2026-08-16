@@ -5,15 +5,15 @@
 }
 
 :root {
-  --rojo: #e63946;
-  --rojo-oscuro: #c1121f;
-  --amarillo: #ffb703;
-  --naranja: #f4a83c;
-  --verde: #2a9d8f;
-  --oscuro: #264653;
-  --gris-claro: #f7f3ee;
+  --rojo: #F2A900;
+  --rojo-oscuro: #1F1D1D;
+  --amarillo: #F2A900;
+  --naranja: #F2A900;
+  --verde: #1F1D1D;
+  --oscuro: #1F1D1D;
+  --gris-claro: #F5F0EB;
   --gris: #6c757d;
-  --blanco: #ffffff;
+  --blanco: #FFFFFF;
 }
 
 body {
@@ -136,6 +136,7 @@ p {
 
 .btn:hover {
   background: var(--rojo-oscuro);
+  color: var(--blanco);
 }
 
 .btn-claro {
@@ -200,9 +201,9 @@ p {
   margin: 0.6rem 0 1rem 1.2rem;
 }
 
-.rojo { background: #fde0e0; border-color: #e63946; }
-.amarillo { background: #fff6d6; border-color: #ffb703; }
-.verde { background: #d9f2ed; border-color: #2a9d8f; }
+.rojo { background: #fde8e5; border-color: var(--rojo); }
+.amarillo { background: #fef6d5; border-color: var(--amarillo); }
+.verde { background: #e2f0e6; border-color: var(--verde); }
 
 .btn-cocina {
   font-size: 1.15rem;
@@ -211,8 +212,8 @@ p {
   margin-top: 0.4rem;
 }
 
-.btn-marchar { background: #ffb703; color: var(--oscuro); }
-.btn-despachar { background: #2a9d8f; }
+.btn-marchar { background: var(--amarillo); color: var(--oscuro); }
+.btn-despachar { background: var(--verde); color: var(--blanco); }
 
 .site-footer {
   background: var(--oscuro);
