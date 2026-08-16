@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BurgerClick — Iniciar sesión</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/login.css" />
+</head>
+<body>
+  <header class="site-header">
+    <img class="logo" src="../img/logo.svg" alt="Logo BurgerClick" />
+    <nav class="main-nav">
+      <ul>
+        <li><a href="../index.html">Inicio</a></li>
+        <li><a href="menu.html">Menú</a></li>
+        <li><a href="pedido.html">Nuevo pedido</a></li>
+        <li><a href="mis-pedidos.html">Mis pedidos</a></li>
+        <li><a href="cocina.html">Cocina</a></li>
+        <li><a href="login.html" class="activo">Iniciar sesión</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="seccion">
+      <h1>Iniciar sesión</h1>
+      <p>
+        Ingresá tus credenciales para acceder a tu cuenta de BurgerClick.
+      </p>
+
+      <div class="aviso">
+        Por seguridad, la cuenta se bloquea 15 minutos después de 3 intentos
+        fallidos consecutivos.
+      </div>
+
+      <form action="../index.html" method="get">
+        <div class="campo">
+          <label for="usuario">Usuario o correo electrónico</label>
+          <input
+            type="text"
+            id="usuario"
+            name="usuario"
+            placeholder="Ej: rocio.gomez@mail.com"
+            required
+          />
+        </div>
+
+        <div class="campo">
+          <label for="contrasena">Contraseña</label>
+          <input
+            type="password"
+            id="contrasena"
+            name="contrasena"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+
+        <fieldset>
+          <legend>Ingresar como</legend>
+          <div class="roles">
+            <label>
+              <input type="radio" name="rol" value="cliente" checked />
+              Cliente
+            </label>
+            <label>
+              <input type="radio" name="rol" value="cocina" />
+              Encargado de cocina
+            </label>
+            <label>
+              <input type="radio" name="rol" value="dueno" />
+              Dueño del local
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="acciones-form">
+          <button type="submit" class="btn">Ingresar</button>
+          <a href="../index.html" class="btn btn-claro">Cancelar</a>
+        </div>
+      </form>
+    </section>
+
+    <section class="seccion">
+      <h2>¿Primera vez en BurgerClick?</h2>
+      <p>
+        Todavía no tenés una cuenta creada, comunicate con el local para que
+        te den de alta como cliente. El registro de usuarios se
+        implementará en una próxima entrega.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>BurgerClick © 2026 — CABA, Argentina · Canal digital exclusivo del local.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,65 @@
+form {
+  margin-top: 1.5rem;
+}
+
+.campo {
+  margin-bottom: 1rem;
+}
+
+.campo label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.campo input[type="text"],
+.campo input[type="password"] {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.campo input:focus {
+  outline: none;
+  border-color: var(--amarillo);
+  box-shadow: 0 0 0 2px rgba(242, 169, 0, 0.15);
+}
+
+fieldset {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1.2rem 0;
+}
+
+legend {
+  font-weight: 700;
+  padding: 0 0.5rem;
+}
+
+.roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.roles label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.roles input[type="radio"] {
+  accent-color: var(--amarillo);
+}
+
+.acciones-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
