@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BurgerClick - Nuevo pedido</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/pedido.css">
+</head>
+<body>
+  <header class="site-header">
+    <img class="logo" src="../img/logo.svg" alt="Logo de BurgerClick">
+    <nav class="main-nav" aria-label="Navegación principal">
+      <ul>
+        <li><a href="../index.html">Inicio</a></li>
+        <li><a href="#">Menú</a></li>
+        <li><a href="../pages/pedido.html" class="activo">Nuevo pedido</a></li>
+        <li><a href="#">Mis pedidos</a></li>
+        <li><a href="../pages/cocina.html">Cocina</a></li>
+        <li><a href="../pages/login.html">Iniciar Sesión</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="seccion">
+      <h1>Armá tu pedido</h1>
+      <p>Elegí tus productos, la modalidad de entrega y confirmá la compra. El costo de envío se calcula según la zona.</p>
+    </section>
+
+    <form action="confirmacion.html" method="get">
+      <section class="seccion">
+        <h2>Hamburguesas</h2>
+        <div class="grilla">
+          <div class="producto">
+            <div class="campo">
+              <label for="clasica">BurgerClick Clásica — $10.200</label>
+              <input type="number" id="clasica" name="clasica" min="0" value="0">
+            </div>
+          </div>
+          <div class="producto">
+            <div class="campo">
+              <label for="bacon">Doble Bacon — $14.500</label>
+              <input type="number" id="bacon" name="bacon" min="0" value="0">
+            </div>
+          </div>
+          <div class="producto producto-agotado">
+            <div class="campo">
+              <label for="veggie">
+                BurgerClick Veggie — $13.500
+                <span class="agotado">Producto agotado</span>
+              </label>
+              <input type="number" id="veggie" name="veggie" min="0" value="0" disabled>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="seccion">
+        <h2>Acompañamientos</h2>
+        <div class="grilla">
+          <div class="producto">
+            <div class="campo">
+              <label for="papas">Papas Clásicas — $4.800</label>
+              <input type="number" id="papas" name="papas" min="0" value="0">
+            </div>
+          </div>
+          <div class="producto">
+            <div class="campo">
+              <label for="papas-cheddar">Papas Cheddar &amp; Panceta — $6.000</label>
+              <input type="number" id="papas-cheddar" name="papas_cheddar" min="0" value="0">
+            </div>
+          </div>
+          <div class="producto">
+            <div class="campo">
+              <label for="aros">Aros de Cebolla — $4.000</label>
+              <input type="number" id="aros" name="aros" min="0" value="0">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="seccion">
+        <h2>Bebidas</h2>
+        <div class="grilla">
+          <div class="producto">
+            <div class="campo">
+              <label for="gaseosa">Gaseosa 500ml — $3.500</label>
+              <input type="number" id="gaseosa" name="gaseosa" min="0" value="0">
+            </div>
+          </div>
+          <div class="producto">
+            <div class="campo">
+              <label for="agua">Agua Saborizada — $2.500</label>
+              <input type="number" id="agua" name="agua" min="0" value="0">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="seccion">
+        <h2>Modalidad de entrega</h2>
+
+        <div class="roles">
+          <label><input type="radio" name="modalidad" value="delivery" checked> Delivery</label>
+          <label><input type="radio" name="modalidad" value="takeaway"> Retiro en el local (take-away)</label>
+        </div>
+
+        <div class="campo">
+          <label for="direccion">Dirección de entrega (solo si elegís delivery)</label>
+          <input type="text" id="direccion" name="direccion" placeholder="Ej: Av. Rivadavia 4200, CABA">
+        </div>
+
+        <div class="aviso">
+          📍 Zona 1 (hasta 10 cuadras): $1000 · Zona 2 (10-20 cuadras): $1.500 · Zona 3 (20-30 cuadras): $2.000 Take-away no tiene costo de envío.
+        </div>
+      </section>
+
+      <section class="seccion">
+        <h2>Resumen de la compra</h2>
+        <div class="ticket">
+          <div class="fila">
+            <span>Subtotal</span>
+            <span>$10.200</span>
+          </div>
+          <div class="fila">
+            <span>Costo de envío (Zona 1)</span>
+            <span>$1.000</span>
+          </div>
+          <div class="fila fila-total">
+            <span>Total final</span>
+            <span>$11.200</span>
+          </div>
+        </div>
+
+        <div class="acciones-form">
+          <button type="submit" class="btn">Confirmar compra</button>
+          <a href="../index.html" class="btn btn-claro">Cancelar</a>
+        </div>
+      </section>
+    </form>
+  </main>
+
+  <footer class="site-footer">
+    <p>BurgerClick &copy; 2026 — CABA, Argentina · Canal digital exclusivo del local.</p>
+  </footer>
+</body>
+</html>
