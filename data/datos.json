@@ -1,0 +1,111 @@
+{
+  "beneficios": [
+    { "id": 1, "icono": "🍔", "titulo": "Elegí visualmente", "texto": "Armá tu pedido viendo cada producto y su precio en tiempo real" },
+    { "id": 2, "icono": "⏱️", "titulo": "Sin esperas al teléfono", "texto": "Nada de líneas ocupadas: cargás tu dirección y confirmás en segundos!" },
+    { "id": 3, "icono": "🧾", "titulo": "Ticket digital", "texto": "Recibí el detalle de tu compra y el tiempo estimado de demora" }
+  ],
+  "usuarios": [
+    { "id": 1, "nombre": "Rocío", "apellido": "Gómez", "email": "rocio.gomez@mail.com", "password": "cliente123", "rol": "cliente" },
+    { "id": 2, "nombre": "Martín", "apellido": "Díaz", "email": "martin.diaz@mail.com", "password": "cliente123", "rol": "cliente" },
+    { "id": 3, "nombre": "Carla", "apellido": "Núñez", "email": "carla.cocina@burgerclick.com", "password": "cocina123", "rol": "cocina" },
+    { "id": 4, "nombre": "Diego", "apellido": "Ferreyra", "email": "diego.cocina@burgerclick.com", "password": "cocina123", "rol": "cocina" },
+    { "id": 5, "nombre": "Débora", "apellido": "Rolón", "email": "dueno@burgerclick.com", "password": "dueno123", "rol": "dueno" },
+    { "id": 6, "nombre": "Melody", "apellido": "Córdoba", "email": "dueno2@burgerclick.com", "password": "dueno123", "rol": "dueno" }
+  ],
+  "productos": [
+    { "id": "clasica", "nombre": "BurgerClick Clásica", "categoria": "Hamburguesas", "precio": 10200, "stock": 25, "descripcion": "Medallón de carne, cheddar, lechuga, tomate y salsa de la casa." },
+    { "id": "bacon", "nombre": "Doble Bacon", "categoria": "Hamburguesas", "precio": 14500, "stock": 12, "descripcion": "Doble medallón, doble cheddar y panceta crocante." },
+    { "id": "veggie", "nombre": "BurgerClick Veggie", "categoria": "Hamburguesas", "precio": 13500, "stock": 0, "descripcion": "Medallón de garbanzo y vegetales, con salsa vegana." },
+    { "id": "papas", "nombre": "Papas Clásicas", "categoria": "Acompañamientos", "precio": 4800, "stock": 40, "descripcion": "Porción de papas fritas con sal." },
+    { "id": "papas_cheddar", "nombre": "Papas Cheddar & Panceta", "categoria": "Acompañamientos", "precio": 6000, "stock": 8, "descripcion": "Papas con cheddar fundido y panceta." },
+    { "id": "aros", "nombre": "Aros de Cebolla", "categoria": "Acompañamientos", "precio": 4000, "stock": 20, "descripcion": "Aros de cebolla rebozados." },
+    { "id": "gaseosa", "nombre": "Gaseosa 500ml", "categoria": "Bebidas", "precio": 3500, "stock": 50, "descripcion": "Línea de gaseosas, botella de 500 ml." },
+    { "id": "agua", "nombre": "Agua Saborizada", "categoria": "Bebidas", "precio": 2500, "stock": 30, "descripcion": "Agua saborizada sin gas, 500 ml." }
+  ],
+  "zonasEnvio": [
+    { "id": "zona1", "nombre": "Zona 1 (hasta 10 cuadras)", "costo": 1000 },
+    { "id": "zona2", "nombre": "Zona 2 (10 a 20 cuadras)", "costo": 1500 },
+    { "id": "zona3", "nombre": "Zona 3 (20 a 30 cuadras)", "costo": 2000 },
+    { "id": "takeaway", "nombre": "Retiro en el local (sin envío)", "costo": 0 }
+  ],
+  "ingredientes": [
+    { "nombre": "Panceta", "stock": 6, "minimo": 10 },
+    { "nombre": "Pan brioche", "stock": 40, "minimo": 15 },
+    { "nombre": "Medallón de carne", "stock": 30, "minimo": 15 },
+    { "nombre": "Cheddar", "stock": 18, "minimo": 10 },
+    { "nombre": "Medallón veggie", "stock": 0, "minimo": 8 },
+    { "nombre": "Cebolla", "stock": 22, "minimo": 8 }
+  ],
+  "pedidos": [
+    {
+      "id": "BC-1042",
+      "clienteId": 1,
+      "items": [
+        { "productoId": "clasica", "nombre": "BurgerClick Clásica", "cantidad": 1, "precio": 10200 },
+        { "productoId": "papas", "nombre": "Papas Clásicas", "cantidad": 1, "precio": 4800 },
+        { "productoId": "gaseosa", "nombre": "Gaseosa 500ml", "cantidad": 1, "precio": 3500 }
+      ],
+      "modalidad": "delivery",
+      "zonaId": "zona1",
+      "direccion": "Av. Rivadavia 4200, CABA",
+      "costoEnvio": 1000,
+      "subtotal": 18500,
+      "total": 19500,
+      "estado": "entregado",
+      "fecha": "2026-09-22",
+      "esperaMin": 0
+    },
+    {
+      "id": "BC-1048",
+      "clienteId": 1,
+      "items": [
+        { "productoId": "bacon", "nombre": "Doble Bacon", "cantidad": 2, "precio": 14500 },
+        { "productoId": "aros", "nombre": "Aros de Cebolla", "cantidad": 1, "precio": 4000 }
+      ],
+      "modalidad": "takeaway",
+      "zonaId": "takeaway",
+      "direccion": "",
+      "costoEnvio": 0,
+      "subtotal": 33000,
+      "total": 33000,
+      "estado": "listo",
+      "fecha": "2026-09-22",
+      "esperaMin": 1
+    },
+    {
+      "id": "BC-1043",
+      "clienteId": 2,
+      "items": [
+        { "productoId": "clasica", "nombre": "BurgerClick Clásica", "cantidad": 1, "precio": 10200 },
+        { "productoId": "papas_cheddar", "nombre": "Papas Cheddar & Panceta", "cantidad": 1, "precio": 6000 },
+        { "productoId": "gaseosa", "nombre": "Gaseosa 500ml", "cantidad": 1, "precio": 3500 }
+      ],
+      "modalidad": "delivery",
+      "zonaId": "zona2",
+      "direccion": "Bartolomé Mitre 2550, CABA",
+      "costoEnvio": 1500,
+      "subtotal": 19700,
+      "total": 21200,
+      "estado": "preparacion",
+      "fecha": "2026-09-22",
+      "esperaMin": 6
+    },
+    {
+      "id": "BC-1051",
+      "clienteId": 2,
+      "items": [
+        { "productoId": "clasica", "nombre": "BurgerClick Clásica", "cantidad": 2, "precio": 10200 },
+        { "productoId": "gaseosa", "nombre": "Gaseosa 500ml", "cantidad": 2, "precio": 3500 }
+      ],
+      "modalidad": "delivery",
+      "zonaId": "zona1",
+      "direccion": "Av. Corrientes 3100, CABA",
+      "costoEnvio": 1000,
+      "subtotal": 27400,
+      "total": 28400,
+      "estado": "pendiente",
+      "fecha": "2026-09-22",
+      "esperaMin": 12
+    }
+  ]
+}

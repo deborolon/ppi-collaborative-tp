@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BurgerClick - Mis pedidos</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="../js/scripts.js" defer></script>
+</head>
+<body data-page="misPedidos" data-require="cliente">
+  <header class="site-header">
+    <img class="logo" src="../img/logo.svg" alt="Logo de BurgerClick">
+    <nav class="main-nav" aria-label="Navegación principal">
+      <ul>
+        <li data-roles="todos"><a href="../index.html">Inicio</a></li>
+        <li data-roles="todos"><a href="menu.html">Menú</a></li>
+        <li data-roles="visitante cliente"><a href="pedido.html">Nuevo pedido</a></li>
+        <li data-roles="cliente"><a href="mis-pedidos.html" class="activo">Mis pedidos</a></li>
+        <li data-roles="cocina"><a href="cocina.html">Cocina</a></li>
+        <li data-roles="dueno"><a href="tablero.html">Tablero</a></li>
+        <li data-roles="visitante"><a href="login.html">Iniciar sesión</a></li>
+        <li data-roles="cliente cocina dueno"><a href="#" data-cerrar-sesion>Cerrar sesión</a></li>
+      </ul>
+      <span class="saludo" data-usuario-conectado></span>
+    </nav>
+  </header>
+
+  <main>
+    <section class="seccion">
+      <h1>Mis pedidos</h1>
+      <p>Acá vas a ver tus compras recientes: entregadas, en preparación y las que podés repetir con un solo clic.</p>
+    </section>
+
+    <section class="seccion">
+      <h2>Historial de pedidos</h2>
+      <div class="grilla" id="historial"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>BurgerClick &copy; 2026 — CABA, Argentina · Canal digital exclusivo del local.</p>
+  </footer>
+</body>
+</html>
