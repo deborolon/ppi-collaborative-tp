@@ -10,6 +10,15 @@ const LS = {
   ultimoPedido: "bc_ultimo_pedido",
 }
 
+const COLOR_ESTADO = { pendiente: "rojo", preparacion: "amarillo", listo: "verde" }
+
+const ETIQUETA_ESTADO = {
+  pendiente: "En espera",
+  preparacion: "En preparación",
+  listo: "Listo para retirar",
+  entregado: "Entregado",
+}
+
 async function cargarDatosIniciales() {
   const respuesta = await fetch(rutaBase() + "data/datos.json")
   return await respuesta.json()
@@ -506,6 +515,171 @@ function repetirPedido(pedidoId, usuario) {
   window.location.reload()
 }
 
+async function initCocina() {
+  const contenedor = document.getElementById("comandas")
+  if (!contenedor) return
+
+  await renderComandas()
+  await renderAvisoStock()
+
+  contenedor.addEventListener("click", async function (e) {
+    const boton = e.target.closest("[data-accion]")
+    if (!boton) return
+    cambiarEstadoPedido(boton.dataset.pedido, boton.dataset.accion)
+    await renderComandas()
+  })
+}
+
+async function renderComandas() {
+  const contenedor = document.getElementById("comandas")
+  contenedor.innerHTML = ""
+  const datos = await getDatos()
+
+  const activas = datos.pedidos.filter((p) => p.estado !== "entregado")
+
+  if (activas.length === 0) {
+    contenedor.innerHTML = "<p>No hay comandas activas en este momento.</p>"
+    return
+  }
+
+  activas.forEach((pedido) => {
+    const cliente = datos.usuarios.find((u) => u.id === pedido.clienteId)
+
+    const nombrePila = cliente ? cliente.nombre : "Cliente"
+
+    const art = document.createElement("article")
+    art.className = "comanda " + (COLOR_ESTADO[pedido.estado] || "")
+
+    const h3 = document.createElement("h3")
+    h3.textContent = "#" + pedido.id + " · " + nombrePila
+    art.appendChild(h3)
+
+    const pEstado = document.createElement("p")
+    const badge = document.createElement("span")
+    badge.className = "estado estado-" + pedido.estado
+    badge.textContent =
+      pedido.estado === "pendiente" ? "Prioridad alta" : ETIQUETA_ESTADO[pedido.estado]
+    pEstado.appendChild(badge)
+    art.appendChild(pEstado)
+
+    const ul = document.createElement("ul")
+    pedido.items.forEach((i) => {
+      const li = document.createElement("li")
+      li.textContent = i.cantidad + "× " + i.nombre
+      ul.appendChild(li)
+    })
+    art.appendChild(ul)
+
+    const espera = document.createElement("p")
+    espera.innerHTML = "<strong>Espera:</strong> " + pedido.esperaMin + " min"
+    art.appendChild(espera)
+
+    if (pedido.estado === "pendiente") {
+      art.appendChild(botonCocina(pedido.id, "marchar", "Marchar", "btn-marchar"))
+    }
+    if (pedido.estado === "preparacion") {
+      art.appendChild(botonCocina(pedido.id, "despachar", "Marcar listo", "btn-despachar"))
+    }
+    if (pedido.estado === "listo") {
+      art.appendChild(botonCocina(pedido.id, "entregar", "Despachar", "btn-despachar"))
+    }
+
+    contenedor.appendChild(art)
+  })
+}
+
+function botonCocina(pedidoId, accion, texto, clase) {
+  const btn = document.createElement("button")
+  btn.type = "button"
+  btn.className = "btn btn-cocina " + clase
+  btn.setAttribute("data-pedido", pedidoId)
+  btn.setAttribute("data-accion", accion)
+  btn.textContent = texto
+  return btn
+}
+
+function cambiarEstadoPedido(pedidoId, accion) {
+  const pedidos = JSON.parse(localStorage.getItem(LS.pedidos))
+  const pedido = pedidos.find((p) => p.id === pedidoId)
+  if (!pedido) return
+
+  const transiciones = {
+    marchar: "preparacion",
+    despachar: "listo",
+    entregar: "entregado",
+  }
+  pedido.estado = transiciones[accion] || pedido.estado
+  if (pedido.estado === "preparacion") pedido.esperaMin = 8
+  if (pedido.estado === "listo") pedido.esperaMin = 1
+  if (pedido.estado === "entregado") pedido.esperaMin = 0
+
+  guardarPedidos(pedidos)
+}
+
+async function renderAvisoStock() {
+  const contenedor = document.getElementById("aviso-stock")
+  if (!contenedor) return
+  const datos = await getDatos()
+  const bajos = datos.ingredientes.filter((i) => i.stock <= i.minimo)
+
+  if (bajos.length === 0) {
+    contenedor.style.display = "none"
+    return
+  }
+  const nombres = bajos
+    .map((i) => i.nombre + (i.stock === 0 ? " (agotado)" : " (" + i.stock + ")"))
+    .join(", ")
+  contenedor.innerHTML =
+    "🟡 <strong>Aviso de stock:</strong> quedan pocas unidades de " +
+    nombres +
+    ". Avisar demoras si es necesario."
+}
+
+async function initTablero() {
+  const contenedor = document.getElementById("tablero")
+  if (!contenedor) return
+
+  const datos = await getDatos()
+  const activos = datos.pedidos.filter((p) => p.estado !== "cancelado")
+
+  const facturacion = activos.reduce((s, p) => s + p.total, 0)
+  document.getElementById("kpi-facturacion").textContent = formatearPrecio(facturacion)
+  document.getElementById("kpi-pedidos").textContent = activos.length
+  const ticketProm = activos.length ? Math.round(facturacion / activos.length) : 0
+  document.getElementById("kpi-ticket").textContent = formatearPrecio(ticketProm)
+
+  const ventas = {}
+  activos.forEach((p) =>
+    p.items.forEach((i) => {
+      ventas[i.nombre] = (ventas[i.nombre] || 0) + i.cantidad
+    })
+  )
+  const ranking = Object.entries(ventas).sort((a, b) => b[1] - a[1])
+
+  const listaRanking = document.getElementById("ranking-productos")
+  ranking.forEach(([nombre, cantidad], idx) => {
+    const li = document.createElement("li")
+    li.innerHTML =
+      "<span class='rank-pos'>" + (idx + 1) + "</span> " +
+      nombre + " <strong>" + cantidad + " u.</strong>"
+    listaRanking.appendChild(li)
+  })
+
+  const listaStock = document.getElementById("ingredientes-bajos")
+  const bajos = datos.ingredientes.filter((i) => i.stock <= i.minimo)
+  if (bajos.length === 0) {
+    listaStock.innerHTML = "<li>Todos los ingredientes con stock suficiente ✅</li>"
+  } else {
+    bajos.forEach((i) => {
+      const li = document.createElement("li")
+      li.className = i.stock === 0 ? "critico" : ""
+      li.textContent =
+        i.nombre + " — " + i.stock + " unidades" + (i.stock === 0 ? " (agotado)" : "")
+      listaStock.appendChild(li)
+    })
+  }
+}
+
 if (protegerPagina()) {
   renderizarNav()
 
@@ -516,7 +690,9 @@ if (protegerPagina()) {
     menu: initMenu,
     pedido: initPedido,
     confirmacion: initConfirmacion,
-    misPedidos: initMisPedidos
+    misPedidos: initMisPedidos,
+    cocina: initCocina,
+    tablero: initTablero
   }
 
   if (Object.prototype.hasOwnProperty.call(rutas, pagina)) {

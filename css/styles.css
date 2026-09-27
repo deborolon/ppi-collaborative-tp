@@ -279,3 +279,64 @@ p {
 
 .pedido-historial .card-body { gap: 0.4rem; }
 .pedido-historial ul { margin: 0.4rem 0 0.6rem 1.2rem; }
+
+.kpis .kpi {
+  flex: 1 1 200px;
+  background: var(--oscuro);
+  color: var(--blanco);
+  border-radius: 12px;
+  padding: 1.4rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.kpi-valor {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--amarillo);
+}
+
+.kpi-label {
+  font-size: 0.9rem;
+  color: #d8d1c7;
+}
+
+.columna { flex: 1 1 320px; }
+
+.ranking {
+  margin-left: 1.2rem;
+  line-height: 1.9;
+}
+
+.ranking .rank-pos {
+  display: inline-block;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1.5rem;
+  text-align: center;
+  background: var(--amarillo);
+  color: var(--oscuro);
+  border-radius: 50%;
+  font-weight: 800;
+  margin-right: 0.4rem;
+}
+
+.lista-stock {
+  list-style: none;
+}
+
+.lista-stock li {
+  padding: 0.5rem 0.8rem;
+  border-left: 5px solid var(--amarillo);
+  background: var(--gris-claro);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.lista-stock li.critico {
+  border-color: #c0392b;
+  color: #922b21;
+}

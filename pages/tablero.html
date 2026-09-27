@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BurgerClick - Tablero del dueño</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="../js/script.js" defer></script>
+</head>
+<body data-page="tablero" data-require="dueno">
+  <header class="site-header">
+    <img class="logo" src="../img/logo.svg" alt="Logo de BurgerClick">
+    <nav class="main-nav" aria-label="Navegación principal">
+      <ul>
+        <li data-roles="todos"><a href="../index.html">Inicio</a></li>
+        <li data-roles="todos"><a href="menu.html">Menú</a></li>
+        <li data-roles="visitante cliente"><a href="pedido.html">Nuevo pedido</a></li>
+        <li data-roles="cliente"><a href="mis-pedidos.html">Mis pedidos</a></li>
+        <li data-roles="cocina"><a href="cocina.html">Cocina</a></li>
+        <li data-roles="dueno"><a href="tablero.html" class="activo">Tablero</a></li>
+        <li data-roles="visitante"><a href="login.html">Iniciar sesión</a></li>
+        <li data-roles="cliente cocina dueno"><a href="#" data-cerrar-sesion>Cerrar sesión</a></li>
+      </ul>
+      <span class="saludo" data-usuario-conectado></span>
+    </nav>
+  </header>
+
+  <main id="tablero">
+    <section class="seccion">
+      <h1>Tablero de control</h1>
+      <p>Resumen de la operación del día: ventas, facturación y estado del stock, todo de un vistazo.</p>
+    </section>
+
+    <section class="seccion">
+      <h2>Indicadores del día</h2>
+      <div class="grilla kpis">
+        <article class="kpi">
+          <span class="kpi-valor" id="kpi-facturacion">$0</span>
+          <span class="kpi-label">Facturación del día</span>
+        </article>
+        <article class="kpi">
+          <span class="kpi-valor" id="kpi-pedidos">0</span>
+          <span class="kpi-label">Pedidos totales</span>
+        </article>
+        <article class="kpi">
+          <span class="kpi-valor" id="kpi-ticket">$0</span>
+          <span class="kpi-label">Ticket promedio</span>
+        </article>
+      </div>
+    </section>
+
+    <div class="grilla">
+      <section class="seccion columna">
+        <h2>Productos más vendidos</h2>
+        <ol class="ranking" id="ranking-productos"></ol>
+      </section>
+
+      <section class="seccion columna">
+        <h2>Ingredientes por reponer</h2>
+        <ul class="lista-stock" id="ingredientes-bajos"></ul>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>BurgerClick &copy; 2026 — CABA, Argentina · Canal digital exclusivo del local.</p>
+  </footer>
+</body>
+</html>
