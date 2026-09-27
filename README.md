@@ -1,90 +1,67 @@
-# TP Hito 1 – Entorno de desarrollo colaborativo
+# BurgerClick
 
-## Descripción
-Configuración del entorno de trabajo colaborativo con Git y GitHub.
-Cada integrante creó una rama personal, añadió un archivo con su nombre y usuario de GitHub, y abrió una Pull Request hacia `main`.
-Todas las PR fueron fusionadas, dejando la rama principal con los aportes de todos.
+Prototipo web para gestionar el recorrido de compra en un local de hamburguesas: consulta del menú, creación de pedidos, seguimiento de estados y vistas de operación para cocina y administración.
 
-## Integrantes del equipo Grupo 5 - Caso "BurgerClick"
-- Débora Rolón – @deborolon
-- Melody Cordoba – @melodyald
-- Morena Cisneros – @
-- Randall Roldan Jaramillo – @randall354ss
-- Tomás Rivas – @tomas-16a
+## Funcionalidades
 
-## Estructura del repositorio
-- `main`: rama principal que contiene el trabajo final de todos los integrantes.  
-- Cada integrante trabajó en su propia rama (ej. `feature/nombre1`, `feature/nombre2`, etc.).
+- **Inicio (`index.html`)**: presentación del local y beneficios cargados desde los datos de ejemplo.
+- **Menú (`pages/menu.html`)**: productos agrupados por categoría, con precio y disponibilidad.
+- **Nuevo pedido (`pages/pedido.html`)**: selección de productos y cantidades, modalidad de entrega, zona y dirección. El subtotal, el envío y el total se actualizan según la selección; no se permite confirmar un pedido vacío.
+- **Confirmación (`pages/confirmacion.html`)**: ticket con número de pedido, productos, modalidad, demora estimada e importes.
+- **Mis pedidos (`pages/mis-pedidos.html`)**: historial del cliente, estados, total y opción para repetir una compra.
+- **Cocina (`pages/cocina.html`)**: comandas activas con transiciones de pendiente a preparación, listo y entregado, además de avisos de stock bajo.
+- **Tablero (`pages/tablero.html`)**: indicadores de facturación, cantidad de pedidos y ticket promedio, productos más vendidos e ingredientes por reponer.
+- **Inicio de sesión (`pages/login.html`)**: acceso de demostración por perfil de cliente, cocina o dueño, con navegación adaptada al rol.
 
-## Proceso seguido
-1. Clonación del repositorio en local.
-2. Creación de una rama personal por cada integrante.
-3. Agregado de un archivo de texto con nombre y usuario de GitHub.
-4. Commit con mensaje descriptivo y push al remoto.
-5. Apertura de Pull Request hacia `main`.
-6. Integración (merge) de todas las Pull Requests.
+## Implementación
 
----
+- Las páginas están construidas con HTML semántico.
+- `css/styles.css` contiene los estilos compartidos; `css/login.css` y `css/pedido.css` contienen reglas específicas.
+- `js/script.js` carga y renderiza la información, valida el pedido vacío, calcula importes, gestiona el historial y actualiza los estados de cocina.
+- `data/datos.json` proporciona los datos iniciales de usuarios, productos, pedidos, zonas de envío, beneficios e ingredientes.
+- `localStorage` conserva la sesión de demostración, los pedidos y sus cambios en el navegador.
 
-# Hito 2 – Prototipo de interfaz HTML/CSS
+## Límites actuales
 
-## Descripción del sistema
-**BurgerClick** es un sistema digital exclusivo para un local de venta de hamburguesas. Permite a los clientes realizar pedidos online de manera rápida, visualizar el menú, y hacer seguimiento de sus comandas. El local cuenta con un panel de cocina para gestionar los pedidos en tiempo real.
+La aplicación funciona enteramente en el navegador. No incluye servidor, base de datos ni sincronización entre dispositivos. Las credenciales y la protección por perfiles son solo para demostración y no constituyen autenticación segura. Los estados y el stock tampoco se comparten entre navegadores.
 
-## Pantallas desarrolladas
-Se han implementado las siguientes páginas navegables:
+Para un uso real, queda integrar un backend y una base de datos, implementar autenticación y autorización seguras, y sincronizar pedidos, estados y stock entre las distintas vistas.
 
-1. **Inicio (`index.html`)**  
-   Página principal con presentación del local, llamado a la acción para ver el menú o iniciar un pedido, y sección de ventajas (elegir visualmente, sin esperas al teléfono, ticket digital).
+## Estructura del proyecto
 
-2. **Menú (`menu.html`)**  
-   (Pendiente de desarrollo) Listado de productos con precios y opciones para agregar al pedido.
-
-3. **Nuevo pedido (`pedido.html`)**  
-   (Pendiente de desarrollo) Formulario para armar el pedido con selección de productos, dirección y confirmación.
-
-4. **Mis pedidos (`mis-pedidos.html`)**  
-   (Pendiente de desarrollo) Historial de pedidos realizados por el cliente.
-
-5. **Cocina (`pages/cocina.html`)**  
-   Panel para el personal de cocina. Muestra las comandas activas con su estado (prioridad alta, en preparación, listo para retirar) y botones para marcar como "Marchar" o "Despachar". Incluye un aviso de stock de panceta.
-
-6. **Iniciar Sesión (`login.html`)**  
-    Formulario de acceso para clientes o personal.
-
-Todas las páginas están vinculadas mediante un menú de navegación común (`<nav>`).
-
-## Estructura de archivos
-El proyecto sigue la organización recomendada:
-
+```text
 /
+├── .gitignore
 ├── index.html
 ├── pages/
-│ └── cocina.html
+│   ├── cocina.html
+│   ├── confirmacion.html
+│   ├── login.html
+│   ├── menu.html
+│   ├── mis-pedidos.html
+│   ├── pedido.html
+│   └── tablero.html
 ├── css/
-│ └── styles.css
+│   ├── login.css
+│   ├── pedido.css
+│   └── styles.css
+├── data/
+│   └── datos.json
 ├── img/
-│ └── logo.svg
+│   └── logo.svg
+├── js/
+│   └── script.js
 └── README.md
+```
 
-- **CSS**: hoja de estilos externa (`styles.css`) con variables CSS, Flexbox y selectores básicos.
-- **HTML semántico**: se utilizan etiquetas como `<header>`, `<nav>`, `<main>`, `<section>`, `<article>`, `<footer>`.
-- **Navegación**: menú con enlaces a todas las páginas.
+Tecnologías: HTML5, CSS3, JavaScript, JSON y `localStorage`. No se utilizan frameworks ni librerías externas.
 
-## Tecnologías utilizadas
-- HTML5 semántico.
-- CSS3 básico (sin frameworks ni librerías externas).
-- Flexbox para disposición de menú y grillas.
-- Variables CSS para gestión de colores.
-- Sin JavaScript, animaciones ni plantillas prediseñadas.
+## Ejecución local
 
-## Funcionalidades previstas para la siguiente entrega
-- Implementación completa del formulario de pedido con validación y confirmación.
-- Visualización de menú con imágenes y precios.
-- Panel de cocina con actualización en tiempo real (simulado).
-- Sistema de autenticación (login/registro).
-- Persistencia de pedidos (simulada mediante almacenamiento local o backend básico).
+La aplicación carga `data/datos.json`, por lo que debe abrirse desde un servidor HTTP estático y no directamente como archivo. Desde la raíz del repositorio, iniciá uno con Python:
 
----
+```bash
+python -m http.server 8000
+```
 
-*Repositorio creado para los Hitos 1 y 2 de la materia Prácticas Profesionalizantes I.*
+Luego ingresá a `http://localhost:8000` en el navegador.
