@@ -58,10 +58,6 @@ Tecnologías: HTML5, CSS3, JavaScript, JSON y `localStorage`. No se utilizan fra
 
 ## Ejecución local
 
-La aplicación carga `data/datos.json`, por lo que debe abrirse desde un servidor HTTP estático y no directamente como archivo. Desde la raíz del repositorio, iniciá uno con Python:
+La aplicación carga `data/datos.json` con `fetch()`, por lo que debe abrirse desde un servidor HTTP estático y no directamente como archivo. Podés iniciarlo de esta forma:
 
-```bash
-python -m http.server 8000
-```
-
-Luego ingresá a `http://localhost:8000` en el navegador.
+- **VS Code:** instalá la extensión Live Server, abrí `index.html` y seleccioná **Go Live**.
