@@ -6,19 +6,23 @@
   <title>BurgerClick - Nuevo pedido</title>
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="stylesheet" href="../css/pedido.css">
+  <script src="../js/script.js" defer></script>
 </head>
-<body>
+<body data-page="pedido" data-require="cliente">
   <header class="site-header">
     <img class="logo" src="../img/logo.svg" alt="Logo de BurgerClick">
     <nav class="main-nav" aria-label="Navegación principal">
       <ul>
-        <li><a href="../index.html">Inicio</a></li>
-        <li><a href="#">Menú</a></li>
-        <li><a href="../pages/pedido.html" class="activo">Nuevo pedido</a></li>
-        <li><a href="#">Mis pedidos</a></li>
-        <li><a href="../pages/cocina.html">Cocina</a></li>
-        <li><a href="../pages/login.html">Iniciar Sesión</a></li>
+        <li data-roles="todos"><a href="../index.html">Inicio</a></li>
+        <li data-roles="todos"><a href="menu.html">Menú</a></li>
+        <li data-roles="visitante cliente"><a href="pedido.html" class="activo">Nuevo pedido</a></li>
+        <li data-roles="cliente"><a href="mis-pedidos.html">Mis pedidos</a></li>
+        <li data-roles="cocina"><a href="cocina.html">Cocina</a></li>
+        <li data-roles="dueno"><a href="tablero.html">Tablero</a></li>
+        <li data-roles="visitante"><a href="login.html">Iniciar sesión</a></li>
+        <li data-roles="cliente cocina dueno"><a href="#" data-cerrar-sesion>Cerrar sesión</a></li>
       </ul>
+      <span class="saludo" data-usuario-conectado></span>
     </nav>
   </header>
 
@@ -28,91 +32,24 @@
       <p>Elegí tus productos, la modalidad de entrega y confirmá la compra. El costo de envío se calcula según la zona.</p>
     </section>
 
-    <form action="confirmacion.html" method="get">
-      <section class="seccion">
-        <h2>Hamburguesas</h2>
-        <div class="grilla">
-          <div class="producto">
-            <div class="campo">
-              <label for="clasica">BurgerClick Clásica — $10.200</label>
-              <input type="number" id="clasica" name="clasica" min="0" value="0">
-            </div>
-          </div>
-          <div class="producto">
-            <div class="campo">
-              <label for="bacon">Doble Bacon — $14.500</label>
-              <input type="number" id="bacon" name="bacon" min="0" value="0">
-            </div>
-          </div>
-          <div class="producto producto-agotado">
-            <div class="campo">
-              <label for="veggie">
-                BurgerClick Veggie — $13.500
-                <span class="agotado">Producto agotado</span>
-              </label>
-              <input type="number" id="veggie" name="veggie" min="0" value="0" disabled>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="seccion">
-        <h2>Acompañamientos</h2>
-        <div class="grilla">
-          <div class="producto">
-            <div class="campo">
-              <label for="papas">Papas Clásicas — $4.800</label>
-              <input type="number" id="papas" name="papas" min="0" value="0">
-            </div>
-          </div>
-          <div class="producto">
-            <div class="campo">
-              <label for="papas-cheddar">Papas Cheddar &amp; Panceta — $6.000</label>
-              <input type="number" id="papas-cheddar" name="papas_cheddar" min="0" value="0">
-            </div>
-          </div>
-          <div class="producto">
-            <div class="campo">
-              <label for="aros">Aros de Cebolla — $4.000</label>
-              <input type="number" id="aros" name="aros" min="0" value="0">
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="seccion">
-        <h2>Bebidas</h2>
-        <div class="grilla">
-          <div class="producto">
-            <div class="campo">
-              <label for="gaseosa">Gaseosa 500ml — $3.500</label>
-              <input type="number" id="gaseosa" name="gaseosa" min="0" value="0">
-            </div>
-          </div>
-          <div class="producto">
-            <div class="campo">
-              <label for="agua">Agua Saborizada — $2.500</label>
-              <input type="number" id="agua" name="agua" min="0" value="0">
-            </div>
-          </div>
-        </div>
-      </section>
+    <form id="form-pedido">
+      <div id="pedido-productos"></div>
 
       <section class="seccion">
         <h2>Modalidad de entrega</h2>
-
         <div class="roles">
           <label><input type="radio" name="modalidad" value="delivery" checked> Delivery</label>
           <label><input type="radio" name="modalidad" value="takeaway"> Retiro en el local (take-away)</label>
         </div>
 
         <div class="campo">
-          <label for="direccion">Dirección de entrega (solo si elegís delivery)</label>
-          <input type="text" id="direccion" name="direccion" placeholder="Ej: Av. Rivadavia 4200, CABA">
+          <label for="zona">Zona de envío</label>
+          <select id="zona" name="zona"></select>
         </div>
 
-        <div class="aviso">
-          📍 Zona 1 (hasta 10 cuadras): $1000 · Zona 2 (10-20 cuadras): $1.500 · Zona 3 (20-30 cuadras): $2.000 Take-away no tiene costo de envío.
+        <div class="campo" id="bloque-direccion">
+          <label for="direccion">Dirección de entrega</label>
+          <input type="text" id="direccion" name="direccion" placeholder="Ej: Av. Rivadavia 4200, CABA">
         </div>
       </section>
 
@@ -121,17 +58,19 @@
         <div class="ticket">
           <div class="fila">
             <span>Subtotal</span>
-            <span>$10.200</span>
+            <span id="resumen-subtotal">$0</span>
           </div>
           <div class="fila">
-            <span>Costo de envío (Zona 1)</span>
-            <span>$1.000</span>
+            <span>Costo de envío</span>
+            <span id="resumen-envio">$0</span>
           </div>
           <div class="fila fila-total">
             <span>Total final</span>
-            <span>$11.200</span>
+            <span id="resumen-total">$0</span>
           </div>
         </div>
+
+        <p id="pedido-error" class="texto-error"></p>
 
         <div class="acciones-form">
           <button type="submit" class="btn">Confirmar compra</button>

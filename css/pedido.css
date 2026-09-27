@@ -1,0 +1,106 @@
+#form-pedido .campo {
+  margin-bottom: 1rem;
+}
+
+#form-pedido label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.producto {
+  flex: 1 1 240px;
+  background: var(--gris-claro);
+  border: 1px solid #e6ddd2;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.producto input[type="number"] {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.producto-agotado {
+  opacity: 0.6;
+}
+
+.agotado {
+  display: inline-block;
+  background: var(--oscuro);
+  color: var(--blanco);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+  border-radius: 12px;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+}
+
+#zona,
+select#zona {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--blanco);
+}
+
+#zona:disabled {
+  background: #ece5db;
+  color: var(--gris);
+}
+
+.ticket {
+  background: var(--gris-claro);
+  border: 1px dashed var(--oscuro);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  max-width: 460px;
+}
+
+.ticket .fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+}
+
+.ticket .fila-total {
+  border-top: 2px solid var(--oscuro);
+  margin-top: 0.4rem;
+  padding-top: 0.6rem;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.ticket-final {
+  margin: 1rem 0 1.5rem;
+}
+
+.ticket-cabecera {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 1.2rem;
+  border-bottom: 2px solid var(--oscuro);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.ticket-modalidad {
+  color: var(--gris);
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.texto-error {
+  color: #c0392b;
+  font-weight: 700;
+  margin: 0.6rem 0 0;
+}

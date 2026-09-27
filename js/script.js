@@ -224,6 +224,206 @@ async function initLogin() {
   })
 }
 
+async function initPedido() {
+  const contenedor = document.getElementById("pedido-productos")
+  if (!contenedor) return
+
+  const datos = await getDatos()
+  const usuario = getUsuarioConectado()
+
+  const categorias = [...new Set(datos.productos.map((p) => p.categoria))]
+  categorias.forEach((categoria) => {
+    const seccion = document.createElement("section")
+    seccion.className = "seccion"
+
+    const titulo = document.createElement("h2")
+    titulo.textContent = categoria
+    seccion.appendChild(titulo)
+
+    const grilla = document.createElement("div")
+    grilla.className = "grilla"
+
+    datos.productos
+      .filter((p) => p.categoria === categoria)
+      .forEach((p) => grilla.appendChild(crearItemPedido(p)))
+
+    seccion.appendChild(grilla)
+    contenedor.appendChild(seccion)
+  })
+
+  const selectZona = document.getElementById("zona")
+  datos.zonasEnvio
+    .filter((z) => z.id !== "takeaway")
+    .forEach((z) => {
+      const opt = document.createElement("option")
+      opt.value = z.id
+      opt.textContent = z.nombre + " — " + formatearPrecio(z.costo)
+      selectZona.appendChild(opt)
+    })
+
+  const recalcular = () => actualizarResumen(datos)
+  contenedor.addEventListener("input", recalcular)
+  document.querySelectorAll("[name='modalidad']").forEach((r) =>
+    r.addEventListener("change", recalcular)
+  )
+  selectZona.addEventListener("change", recalcular)
+  actualizarResumen(datos)
+
+  document.getElementById("form-pedido").addEventListener("submit", function (e) {
+    e.preventDefault()
+    const items = leerItemsSeleccionados()
+
+    if (items.length === 0) {
+      document.getElementById("pedido-error").textContent =
+        "Elegí al menos un producto para confirmar la compra."
+      return
+    }
+
+    const modalidad = document.querySelector("[name='modalidad']:checked").value
+    const zonaId = modalidad === "delivery" ? selectZona.value : "takeaway"
+    const zona = datos.zonasEnvio.find((z) => z.id === zonaId)
+    const subtotal = items.reduce((s, i) => s + i.precio * i.cantidad, 0)
+    const costoEnvio = zona ? zona.costo : 0
+
+    const nuevoPedido = {
+      id: "BC-" + Math.floor(1000 + Math.random() * 9000),
+      clienteId: usuario ? usuario.id : 0,
+      items: items,
+      modalidad: modalidad,
+      zonaId: zonaId,
+      direccion: document.getElementById("direccion").value.trim(),
+      costoEnvio: costoEnvio,
+      subtotal: subtotal,
+      total: subtotal + costoEnvio,
+      estado: "pendiente",
+      fecha: new Date().toISOString().slice(0, 10),
+      esperaMin: 15,
+    }
+
+    const pedidos = JSON.parse(localStorage.getItem(LS.pedidos))
+    pedidos.push(nuevoPedido)
+    guardarPedidos(pedidos)
+    localStorage.setItem(LS.ultimoPedido, JSON.stringify(nuevoPedido))
+
+    window.location.href = rutaBase() + "pages/confirmacion.html"
+  })
+}
+
+function crearItemPedido(producto) {
+  const agotado = producto.stock <= 0
+
+  const wrap = document.createElement("div")
+  wrap.className = "producto" + (agotado ? " producto-agotado" : "")
+
+  const campo = document.createElement("div")
+  campo.className = "campo"
+
+  const label = document.createElement("label")
+  label.setAttribute("for", producto.id)
+  label.textContent = producto.nombre + " — " + formatearPrecio(producto.precio)
+
+  if (agotado) {
+    const span = document.createElement("span")
+    span.className = "agotado"
+    span.textContent = "Producto agotado"
+    label.appendChild(document.createTextNode(" "))
+    label.appendChild(span)
+  }
+
+  const input = document.createElement("input")
+  input.type = "number"
+  input.id = producto.id
+  input.min = "0"
+  input.value = "0"
+  input.dataset.precio = producto.precio
+  input.dataset.nombre = producto.nombre
+  input.dataset.productoId = producto.id
+  if (agotado) input.disabled = true
+
+  campo.appendChild(label)
+  campo.appendChild(input)
+  wrap.appendChild(campo)
+  return wrap
+}
+
+function leerItemsSeleccionados() {
+  const items = []
+  document.querySelectorAll("#pedido-productos input[type='number']").forEach((input) => {
+    const cantidad = parseInt(input.value, 10) || 0
+    if (cantidad > 0) {
+      items.push({
+        productoId: input.dataset.productoId,
+        nombre: input.dataset.nombre,
+        cantidad: cantidad,
+        precio: parseInt(input.dataset.precio, 10),
+      })
+    }
+  })
+  return items
+}
+
+function actualizarResumen(datos) {
+  const items = leerItemsSeleccionados()
+  const subtotal = items.reduce((s, i) => s + i.precio * i.cantidad, 0)
+
+  const modalidad = document.querySelector("[name='modalidad']:checked").value
+  const selectZona = document.getElementById("zona")
+  const campoDireccion = document.getElementById("bloque-direccion")
+
+  let costoEnvio = 0
+  if (modalidad === "delivery") {
+    const zona = datos.zonasEnvio.find((z) => z.id === selectZona.value)
+    costoEnvio = zona ? zona.costo : 0
+    selectZona.disabled = false
+    if (campoDireccion) campoDireccion.style.display = ""
+  } else {
+    selectZona.disabled = true
+    if (campoDireccion) campoDireccion.style.display = "none"
+  }
+
+  document.getElementById("resumen-subtotal").textContent = formatearPrecio(subtotal)
+  document.getElementById("resumen-envio").textContent = formatearPrecio(costoEnvio)
+  document.getElementById("resumen-total").textContent = formatearPrecio(subtotal + costoEnvio)
+}
+
+function initConfirmacion() {
+  const contenedor = document.getElementById("ticket")
+  if (!contenedor) return
+
+  const pedido = JSON.parse(localStorage.getItem(LS.ultimoPedido) || "null")
+  if (!pedido) {
+    contenedor.innerHTML = "<p>No encontramos un pedido reciente. Volvé a armar tu compra.</p>"
+    return
+  }
+
+  document.getElementById("ticket-numero").textContent = pedido.id
+  document.getElementById("ticket-demora").textContent = pedido.esperaMin + " min"
+
+  const lista = document.getElementById("ticket-items")
+  pedido.items.forEach((i) => {
+    const fila = document.createElement("div")
+    fila.className = "fila"
+    const desc = document.createElement("span")
+    desc.textContent = i.cantidad + "× " + i.nombre
+    const monto = document.createElement("span")
+    monto.textContent = formatearPrecio(i.precio * i.cantidad)
+    fila.appendChild(desc)
+    fila.appendChild(monto)
+    lista.appendChild(fila)
+  })
+
+  document.getElementById("ticket-subtotal").textContent = formatearPrecio(pedido.subtotal)
+  document.getElementById("ticket-envio").textContent = formatearPrecio(pedido.costoEnvio)
+  document.getElementById("ticket-total").textContent = formatearPrecio(pedido.total)
+
+  const modalidad = document.getElementById("ticket-modalidad")
+  if (modalidad) {
+    modalidad.textContent =
+      pedido.modalidad === "delivery"
+        ? "Delivery — " + (pedido.direccion || "sin dirección")
+        : "Retiro en el local (take-away)"
+  }
+}
 
 if (protegerPagina()) {
   renderizarNav()
@@ -232,7 +432,9 @@ if (protegerPagina()) {
   const rutas = {
     inicio: initInicio,
     login: initLogin,
-    menu: initMenu
+    menu: initMenu,
+    pedido: initPedido,
+    confirmacion: initConfirmacion
   }
 
   if (Object.prototype.hasOwnProperty.call(rutas, pagina)) {
