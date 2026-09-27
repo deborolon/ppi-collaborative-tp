@@ -223,3 +223,19 @@ async function initLogin() {
     window.location.href = rutaBase() + "pages/" + destinos[usuario.rol]
   })
 }
+
+
+if (protegerPagina()) {
+  renderizarNav()
+
+  const pagina = document.body.dataset.page
+  const rutas = {
+    inicio: initInicio,
+    login: initLogin,
+    menu: initMenu
+  }
+
+  if (Object.prototype.hasOwnProperty.call(rutas, pagina)) {
+    rutas[pagina]()
+  }
+}
