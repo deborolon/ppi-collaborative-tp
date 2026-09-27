@@ -186,3 +186,40 @@ async function initInicio() {
   })
 }
 
+async function initLogin() {
+  const form = document.getElementById("form-login")
+  if (!form) return
+
+  const datos = await getDatos()
+  const mensaje = document.getElementById("login-mensaje")
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault()
+    const email = document.getElementById("usuario").value.trim().toLowerCase()
+    const password = document.getElementById("contrasena").value
+
+    const usuario = datos.usuarios.find(
+      (u) => u.email.toLowerCase() === email && u.password === password
+    )
+
+    if (!usuario) {
+      mensaje.textContent = "Usuario o contraseña incorrectos. Volvé a intentar."
+      mensaje.className = "aviso aviso-error"
+      return
+    }
+
+    setUsuarioConectado({
+      id: usuario.id,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      rol: usuario.rol,
+    })
+
+    const destinos = {
+      cliente: "pedido.html",
+      cocina: "cocina.html",
+      dueno: "tablero.html",
+    }
+    window.location.href = rutaBase() + "pages/" + destinos[usuario.rol]
+  })
+}
