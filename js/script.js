@@ -425,6 +425,87 @@ function initConfirmacion() {
   }
 }
 
+async function initMisPedidos() {
+  const contenedor = document.getElementById("historial")
+  if (!contenedor) return
+
+  const usuario = getUsuarioConectado()
+  const datos = await getDatos()
+  const mios = datos.pedidos.filter((p) => usuario && p.clienteId === usuario.id)
+
+  if (mios.length === 0) {
+    contenedor.innerHTML = "<p>Todavía no tenés pedidos. ¡Armá tu primera compra!</p>"
+    return
+  }
+
+  mios.reverse().forEach((pedido) => contenedor.appendChild(crearTarjetaPedido(pedido)))
+
+  contenedor.addEventListener("click", function (e) {
+    const boton = e.target.closest("[data-repetir]")
+    if (!boton) return
+    repetirPedido(boton.dataset.repetir, usuario)
+  })
+}
+
+function crearTarjetaPedido(pedido) {
+  const card = document.createElement("article")
+  card.className = "card pedido-historial"
+
+  const body = document.createElement("div")
+  body.className = "card-body"
+
+  const h3 = document.createElement("h3")
+  h3.textContent = "Pedido " + pedido.id
+  body.appendChild(h3)
+
+  const estado = document.createElement("span")
+  estado.className = "estado estado-" + pedido.estado
+  estado.textContent = ETIQUETA_ESTADO[pedido.estado] || pedido.estado
+  body.appendChild(estado)
+
+  const ul = document.createElement("ul")
+  pedido.items.forEach((i) => {
+    const li = document.createElement("li")
+    li.textContent = i.cantidad + "× " + i.nombre
+    ul.appendChild(li)
+  })
+  body.appendChild(ul)
+
+  const total = document.createElement("p")
+  total.innerHTML = "<strong>Total:</strong> " + formatearPrecio(pedido.total)
+  body.appendChild(total)
+
+  const btn = document.createElement("button")
+  btn.type = "button"
+  btn.className = "btn"
+  btn.setAttribute("data-repetir", pedido.id)
+  btn.textContent = "Repetir compra"
+  body.appendChild(btn)
+
+  card.appendChild(body)
+  return card
+}
+
+function repetirPedido(pedidoId, usuario) {
+  const pedidos = JSON.parse(localStorage.getItem(LS.pedidos))
+  const original = pedidos.find((p) => p.id === pedidoId)
+  if (!original) return
+
+  const copia = {
+    ...original,
+    id: "BC-" + Math.floor(1000 + Math.random() * 9000),
+    clienteId: usuario ? usuario.id : original.clienteId,
+    estado: "pendiente",
+    fecha: new Date().toISOString().slice(0, 10),
+    esperaMin: 15,
+    items: original.items.map((i) => ({ ...i })),
+  }
+
+  pedidos.push(copia)
+  guardarPedidos(pedidos)
+  window.location.reload()
+}
+
 if (protegerPagina()) {
   renderizarNav()
 
@@ -434,7 +515,8 @@ if (protegerPagina()) {
     login: initLogin,
     menu: initMenu,
     pedido: initPedido,
-    confirmacion: initConfirmacion
+    confirmacion: initConfirmacion,
+    misPedidos: initMisPedidos
   }
 
   if (Object.prototype.hasOwnProperty.call(rutas, pagina)) {
