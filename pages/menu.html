@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BurgerClick - Cocina</title>
+  <title>BurgerClick - Menú</title>
   <link rel="stylesheet" href="../css/styles.css">
   <script src="../js/script.js" defer></script>
 </head>
-<body data-page="cocina" data-require="cocina">
+<body data-page="menu">
   <header class="site-header">
     <img class="logo" src="../img/logo.svg" alt="Logo de BurgerClick">
     <nav class="main-nav" aria-label="Navegación principal">
       <ul>
         <li data-roles="todos"><a href="../index.html">Inicio</a></li>
-        <li data-roles="todos"><a href="menu.html">Menú</a></li>
+        <li data-roles="todos"><a href="menu.html" class="activo">Menú</a></li>
         <li data-roles="visitante cliente"><a href="pedido.html">Nuevo pedido</a></li>
         <li data-roles="cliente"><a href="mis-pedidos.html">Mis pedidos</a></li>
-        <li data-roles="cocina"><a href="cocina.html" class="activo">Cocina</a></li>
+        <li data-roles="cocina"><a href="cocina.html">Cocina</a></li>
         <li data-roles="dueno"><a href="tablero.html">Tablero</a></li>
         <li data-roles="visitante"><a href="login.html">Iniciar sesión</a></li>
         <li data-roles="cliente cocina dueno"><a href="#" data-cerrar-sesion>Cerrar sesión</a></li>
@@ -27,23 +27,11 @@
 
   <main>
     <section class="seccion">
-      <h1>Panel de cocina</h1>
-      <div class="aviso" id="aviso-stock"></div>
+      <h1>Nuestro menú</h1>
+      <p>Estos son todos los productos disponibles en BurgerClick. Los precios y la disponibilidad se actualizan automáticamente.</p>
     </section>
 
-    <section class="seccion">
-      <h2>Comandas activas</h2>
-      <div class="comandas" id="comandas"></div>
-    </section>
-
-    <section class="seccion">
-      <h2>Referencia de colores</h2>
-      <ul class="lista-referencia">
-        <li>🔴 <strong>Rojo:</strong> pedido nuevo &rarr; prioridad alta.</li>
-        <li>🟡 <strong>Amarillo:</strong> en preparación &rarr; dentro de tiempo.</li>
-        <li>🟢 <strong>Verde:</strong> listo para retirar &rarr; despachar.</li>
-      </ul>
-    </section>
+    <div id="menu-lista"></div>
   </main>
 
   <footer class="site-footer">

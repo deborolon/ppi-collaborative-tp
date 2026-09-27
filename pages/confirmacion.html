@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BurgerClick - Pedido confirmado</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/pedido.css">
+  <script src="../js/script.js" defer></script>
+</head>
+<body data-page="confirmacion" data-require="cliente">
+  <header class="site-header">
+    <img class="logo" src="../img/logo.svg" alt="Logo de BurgerClick">
+    <nav class="main-nav" aria-label="Navegación principal">
+      <ul>
+        <li data-roles="todos"><a href="../index.html">Inicio</a></li>
+        <li data-roles="todos"><a href="menu.html">Menú</a></li>
+        <li data-roles="visitante cliente"><a href="pedido.html">Nuevo pedido</a></li>
+        <li data-roles="cliente"><a href="mis-pedidos.html">Mis pedidos</a></li>
+        <li data-roles="cocina"><a href="cocina.html">Cocina</a></li>
+        <li data-roles="dueno"><a href="tablero.html">Tablero</a></li>
+        <li data-roles="visitante"><a href="login.html">Iniciar sesión</a></li>
+        <li data-roles="cliente cocina dueno"><a href="#" data-cerrar-sesion>Cerrar sesión</a></li>
+      </ul>
+      <span class="saludo" data-usuario-conectado></span>
+    </nav>
+  </header>
+
+  <main>
+    <section class="seccion">
+      <h1>¡Pedido confirmado! 🎉</h1>
+      <p>Gracias por tu compra. Este es tu ticket digital con el detalle y el tiempo estimado de demora.</p>
+
+      <div class="ticket ticket-final" id="ticket">
+        <div class="ticket-cabecera">
+          <span>Pedido</span>
+          <span id="ticket-numero">—</span>
+        </div>
+        <p class="ticket-modalidad" id="ticket-modalidad"></p>
+
+        <div id="ticket-items"></div>
+
+        <div class="fila">
+          <span>Subtotal</span>
+          <span id="ticket-subtotal">$0</span>
+        </div>
+        <div class="fila">
+          <span>Costo de envío</span>
+          <span id="ticket-envio">$0</span>
+        </div>
+        <div class="fila fila-total">
+          <span>Total</span>
+          <span id="ticket-total">$0</span>
+        </div>
+        <div class="fila">
+          <span>Tiempo estimado de demora</span>
+          <span id="ticket-demora">—</span>
+        </div>
+      </div>
+
+      <div class="acciones-form">
+        <a href="mis-pedidos.html" class="btn">Ver mis pedidos</a>
+        <a href="pedido.html" class="btn btn-claro">Hacer otro pedido</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>BurgerClick &copy; 2026 — CABA, Argentina · Canal digital exclusivo del local.</p>
+  </footer>
+</body>
+</html>

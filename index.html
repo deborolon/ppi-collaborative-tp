@@ -5,19 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BurgerClick - Inicio</title>
   <link rel="stylesheet" href="css/styles.css">
+  <script src="js/script.js" defer></script>
 </head>
-<body>
+<body data-page="inicio">
   <header class="site-header">
     <img class="logo" src="img/logo.svg" alt="Logo de BurgerClick">
     <nav class="main-nav" aria-label="Navegación principal">
       <ul>
-        <li><a href="index.html" class="activo">Inicio</a></li>
-        <li><a href="#">Menú</a></li>
-        <li><a href="#">Nuevo pedido</a></li>
-        <li><a href="#">Mis pedidos</a></li>
-        <li><a href="pages/cocina.html">Cocina</a></li>
-        <li><a href="pages/login.html">Iniciar Sesión</a></li>
+        <li data-roles="todos"><a href="index.html" class="activo">Inicio</a></li>
+        <li data-roles="todos"><a href="pages/menu.html">Menú</a></li>
+        <li data-roles="visitante cliente"><a href="pages/pedido.html">Nuevo pedido</a></li>
+        <li data-roles="cliente"><a href="pages/mis-pedidos.html">Mis pedidos</a></li>
+        <li data-roles="cocina"><a href="pages/cocina.html">Cocina</a></li>
+        <li data-roles="dueno"><a href="pages/tablero.html">Tablero</a></li>
+        <li data-roles="visitante"><a href="pages/login.html">Iniciar sesión</a></li>
+        <li data-roles="cliente cocina dueno"><a href="#" data-cerrar-sesion>Cerrar sesión</a></li>
       </ul>
+      <span class="saludo" data-usuario-conectado></span>
     </nav>
   </header>
 
@@ -27,33 +31,14 @@
       <p>
         Pedí online en <strong>BurgerClick</strong>, elegí tus favoritas de manera rápida y seguí tu pedido en tiempo real. Delivery y take-away 🍔
       </p>
-      <a href="menu.html" class="btn btn-claro">Ver el menú</a>
-      <a href="pedido.html" class="btn">Iniciar pedido</a>
+      <a href="pages/menu.html" class="btn btn-claro">Ver el menú</a>
+      <a href="pages/pedido.html" class="btn">Iniciar pedido</a>
     </section>
 
-    <section class="seccion">
-      <h2>¿Por qué BurgerClick?</h2>
-      <div class="grilla">
-        <article class="card">
-          <div class="card-body">
-            <h3>🍔 Elegí visualmente</h3>
-            <p>Armá tu pedido viendo cada producto y su precio en tiempo real</p>
-          </div>
-        </article>
-        <article class="card">
-          <div class="card-body">
-            <h3>⏱️ Sin esperas al teléfono</h3>
-            <p>Nada de líneas ocupadas: cargás tu dirección y confirmás en segundos!</p>
-          </div>
-        </article>
-        <article class="card">
-          <div class="card-body">
-            <h3>🧾 Ticket digital</h3>
-            <p>Recibí el detalle de tu compra y el tiempo estimado de demora</p>
-          </div>
-        </article>
-      </div>
-    </section>
+  <section class="seccion">
+    <h2>¿Por qué BurgerClick?</h2>
+    <div class="grilla" id="beneficios-lista"></div>
+  </section>
   </main>
 
   <footer class="site-footer">

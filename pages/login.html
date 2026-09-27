@@ -6,19 +6,23 @@
   <title>BurgerClick — Iniciar sesión</title>
   <link rel="stylesheet" href="../css/styles.css" />
   <link rel="stylesheet" href="../css/login.css" />
+  <script src="../js/script.js" defer></script>
 </head>
-<body>
+<body data-page="login">
   <header class="site-header">
     <img class="logo" src="../img/logo.svg" alt="Logo BurgerClick" />
-    <nav class="main-nav">
+    <nav class="main-nav" aria-label="Navegación principal">
       <ul>
-        <li><a href="../index.html">Inicio</a></li>
-        <li><a href="menu.html">Menú</a></li>
-        <li><a href="pedido.html">Nuevo pedido</a></li>
-        <li><a href="mis-pedidos.html">Mis pedidos</a></li>
-        <li><a href="cocina.html">Cocina</a></li>
-        <li><a href="login.html" class="activo">Iniciar sesión</a></li>
+        <li data-roles="todos"><a href="../index.html">Inicio</a></li>
+        <li data-roles="todos"><a href="menu.html">Menú</a></li>
+        <li data-roles="visitante cliente"><a href="pedido.html">Nuevo pedido</a></li>
+        <li data-roles="cliente"><a href="mis-pedidos.html">Mis pedidos</a></li>
+        <li data-roles="cocina"><a href="cocina.html">Cocina</a></li>
+        <li data-roles="dueno"><a href="tablero.html">Tablero</a></li>
+        <li data-roles="visitante"><a href="login.html" class="activo">Iniciar sesión</a></li>
+        <li data-roles="cliente cocina dueno"><a href="#" data-cerrar-sesion>Cerrar sesión</a></li>
       </ul>
+      <span class="saludo" data-usuario-conectado></span>
     </nav>
   </header>
 
@@ -29,12 +33,9 @@
         Ingresá tus credenciales para acceder a tu cuenta de BurgerClick.
       </p>
 
-      <div class="aviso">
-        Por seguridad, la cuenta se bloquea 15 minutos después de 3 intentos
-        fallidos consecutivos.
-      </div>
+      <div id="login-mensaje"></div>
 
-      <form action="../index.html" method="get">
+      <form id="form-login">
         <div class="campo">
           <label for="usuario">Usuario o correo electrónico</label>
           <input
@@ -57,24 +58,6 @@
           />
         </div>
 
-        <fieldset>
-          <legend>Ingresar como</legend>
-          <div class="roles">
-            <label>
-              <input type="radio" name="rol" value="cliente" checked />
-              Cliente
-            </label>
-            <label>
-              <input type="radio" name="rol" value="cocina" />
-              Encargado de cocina
-            </label>
-            <label>
-              <input type="radio" name="rol" value="dueno" />
-              Dueño del local
-            </label>
-          </div>
-        </fieldset>
-
         <div class="acciones-form">
           <button type="submit" class="btn">Ingresar</button>
           <a href="../index.html" class="btn btn-claro">Cancelar</a>
@@ -83,12 +66,13 @@
     </section>
 
     <section class="seccion">
-      <h2>¿Primera vez en BurgerClick?</h2>
-      <p>
-        Todavía no tenés una cuenta creada, comunicate con el local para que
-        te den de alta como cliente. El registro de usuarios se
-        implementará en una próxima entrega.
-      </p>
+      <h2>Cuentas de prueba</h2>
+      <p>Para probar el sistema podés usar estas credenciales según el rol:</p>
+      <ul class="lista-credenciales">
+        <li><strong>Cliente:</strong> rocio.gomez@mail.com / cliente123</li>
+        <li><strong>Encargado de cocina:</strong> carla.cocina@burgerclick.com / cocina123</li>
+        <li><strong>Dueño del local:</strong> dueno@burgerclick.com / dueno123</li>
+      </ul>
     </section>
   </main>
 
