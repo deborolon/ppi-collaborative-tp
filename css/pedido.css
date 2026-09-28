@@ -104,3 +104,11 @@ select#zona {
   font-weight: 700;
   margin: 0.6rem 0 0;
 }
+#direccion {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
