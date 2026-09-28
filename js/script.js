@@ -289,6 +289,14 @@ async function initPedido() {
     }
 
     const modalidad = document.querySelector("[name='modalidad']:checked").value
+    const direccion = document.getElementById("direccion").value.trim()
+        document.getElementById("pedido-error").textContent = ""
+
+       if (modalidad === "delivery" && direccion === "") {
+        document.getElementById("pedido-error").textContent =
+        "Ingresá la dirección de entrega para confirmar el pedido."
+         return
+        }
     const zonaId = modalidad === "delivery" ? selectZona.value : "takeaway"
     const zona = datos.zonasEnvio.find((z) => z.id === zonaId)
     const subtotal = items.reduce((s, i) => s + i.precio * i.cantidad, 0)
