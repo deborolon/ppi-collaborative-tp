@@ -24,8 +24,8 @@ form {
 
 .campo input:focus {
   outline: none;
-  border-color: var(--amarillo);
-  box-shadow: 0 0 0 2px rgba(242, 169, 0, 0.15);
+  border-color: var(--rojo);
+  box-shadow: 0 0 0 3px rgba(183, 71, 56, 0.15);
 }
 
 fieldset {
@@ -54,7 +54,7 @@ legend {
 }
 
 .roles input[type="radio"] {
-  accent-color: var(--amarillo);
+  accent-color: var(--rojo);
 }
 
 .acciones-form {

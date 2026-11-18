@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BurgerClick - Inicio</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/script.js" defer></script>
+</head>
+<body data-page="inicio">
+  <header class="site-header">
+    <a class="brand-link" href="index.html" aria-label="BurgerClick, ir al inicio">
+      <img class="logo" src="assets/logo.svg" alt="">
+      <span class="brand-copy">
+        <span class="brand-name">Burger<span>Click</span></span>
+      </span>
+    </a>
+    <nav class="main-nav" aria-label="Navegación principal">
+      <ul>
+        <li data-roles="todos"><a href="index.html" class="activo">Inicio</a></li>
+        <li data-roles="todos"><a href="pages/menu.html">Menú</a></li>
+        <li data-roles="cliente"><a href="pages/pedido.html">Nuevo pedido</a></li>
+        <li data-roles="cliente"><a href="pages/mis-pedidos.html">Mis pedidos</a></li>
+        <li data-roles="cocina"><a href="pages/cocina.html">Cocina</a></li>
+        <li data-roles="dueno"><a href="pages/tablero.html">Tablero</a></li>
+        <li data-roles="visitante"><a href="pages/login.html">Iniciar sesión</a></li>
+        <li data-roles="cliente cocina dueno"><a href="#" data-cerrar-sesion>Cerrar sesión</a></li>
+      </ul>
+      <span class="saludo" data-usuario-conectado></span>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="hero-etiqueta">Hecho para disfrutar</p>
+        <h1>Tu antojo, a un clic.</h1>
+        <p>
+          Elegí tus favoritos, armá tu pedido y disfrutá BurgerClick donde quieras.
+          Delivery o para retirar.
+        </p>
+        <div class="hero-acciones">
+          <a href="pages/menu.html" class="btn btn-claro">Explorar el menú</a>
+          <a href="pages/login.html" class="btn btn-hero-secundario" data-roles="visitante">Iniciar sesión para pedir</a>
+          <a href="pages/pedido.html" class="btn btn-hero-secundario" data-roles="cliente">Hacer un pedido</a>
+        </div>
+      </div>
+      <div class="hero-ilustracion" aria-hidden="true">
+        <div class="hero-ilustracion-principal">
+          <img src="assets/sandwich.svg" alt="">
+        </div>
+        <div class="hero-ilustracion-secundaria hero-papas">
+          <img src="assets/french-fries.svg" alt="">
+        </div>
+        <div class="hero-ilustracion-secundaria hero-bebida">
+          <img src="assets/drink.svg" alt="">
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>¿Por qué BurgerClick?</h2>
+      <div class="grilla" id="beneficios-lista"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>BurgerClick &copy; 2026 — CABA, Argentina · Canal digital exclusivo del local.</p>
+  </footer>
+</body>
+</html>

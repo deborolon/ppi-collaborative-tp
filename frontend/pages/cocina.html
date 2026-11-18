@@ -9,12 +9,17 @@
 </head>
 <body data-page="cocina" data-require="cocina">
   <header class="site-header">
-    <img class="logo" src="../img/logo.svg" alt="Logo de BurgerClick">
+    <a class="brand-link" href="../index.html" aria-label="BurgerClick, ir al inicio">
+      <img class="logo" src="../assets/logo.svg" alt="">
+      <span class="brand-copy">
+        <span class="brand-name">Burger<span>Click</span></span>
+      </span>
+    </a>
     <nav class="main-nav" aria-label="Navegación principal">
       <ul>
         <li data-roles="todos"><a href="../index.html">Inicio</a></li>
         <li data-roles="todos"><a href="menu.html">Menú</a></li>
-        <li data-roles="visitante cliente"><a href="pedido.html">Nuevo pedido</a></li>
+        <li data-roles="cliente"><a href="pedido.html">Nuevo pedido</a></li>
         <li data-roles="cliente"><a href="mis-pedidos.html">Mis pedidos</a></li>
         <li data-roles="cocina"><a href="cocina.html" class="activo">Cocina</a></li>
         <li data-roles="dueno"><a href="tablero.html">Tablero</a></li>
@@ -37,11 +42,11 @@
     </section>
 
     <section class="seccion">
-      <h2>Referencia de colores</h2>
-      <ul class="lista-referencia">
-        <li>🔴 <strong>Rojo:</strong> pedido nuevo &rarr; prioridad alta.</li>
-        <li>🟡 <strong>Amarillo:</strong> en preparación &rarr; dentro de tiempo.</li>
-        <li>🟢 <strong>Verde:</strong> listo para retirar &rarr; despachar.</li>
+      <h2>Estados de las comandas</h2>
+      <ul class="lista-referencia semaforo">
+        <li><span class="semaforo-luz luz-roja" aria-hidden="true"></span><span><strong>Rojo:</strong> pedido nuevo, prioridad alta.</span></li>
+        <li><span class="semaforo-luz luz-amarilla" aria-hidden="true"></span><span><strong>Amarillo:</strong> en preparación.</span></li>
+        <li><span class="semaforo-luz luz-verde" aria-hidden="true"></span><span><strong>Verde:</strong> listo para retirar; despachar.</span></li>
       </ul>
     </section>
   </main>

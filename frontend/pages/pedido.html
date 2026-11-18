@@ -10,12 +10,17 @@
 </head>
 <body data-page="pedido" data-require="cliente">
   <header class="site-header">
-    <img class="logo" src="../img/logo.svg" alt="Logo de BurgerClick">
+    <a class="brand-link" href="../index.html" aria-label="BurgerClick, ir al inicio">
+      <img class="logo" src="../assets/logo.svg" alt="">
+      <span class="brand-copy">
+        <span class="brand-name">Burger<span>Click</span></span>
+      </span>
+    </a>
     <nav class="main-nav" aria-label="Navegación principal">
       <ul>
         <li data-roles="todos"><a href="../index.html">Inicio</a></li>
         <li data-roles="todos"><a href="menu.html">Menú</a></li>
-        <li data-roles="visitante cliente"><a href="pedido.html" class="activo">Nuevo pedido</a></li>
+        <li data-roles="cliente"><a href="pedido.html" class="activo">Nuevo pedido</a></li>
         <li data-roles="cliente"><a href="mis-pedidos.html">Mis pedidos</a></li>
         <li data-roles="cocina"><a href="cocina.html">Cocina</a></li>
         <li data-roles="dueno"><a href="tablero.html">Tablero</a></li>

@@ -12,6 +12,17 @@ const LS = {
 
 const COLOR_ESTADO = { pendiente: "rojo", preparacion: "amarillo", listo: "verde" }
 
+const IMAGENES_PRODUCTO = {
+  clasica: "sandwich.svg",
+  bacon: "sandwich.svg",
+  veggie: "sandwich.svg",
+  papas: "french-fries.svg",
+  papas_cheddar: "cheese.svg",
+  aros: "onion-rings.svg",
+  gaseosa: "soda.svg",
+  agua: "water.svg",
+}
+
 const ETIQUETA_ESTADO = {
   pendiente: "En espera",
   preparacion: "En preparación",
@@ -20,7 +31,7 @@ const ETIQUETA_ESTADO = {
 }
 
 async function cargarDatosIniciales() {
-  const respuesta = await fetch(rutaBase() + "data/datos.json")
+  const respuesta = await fetch("/api/datos")
   return await respuesta.json()
 }
 
@@ -72,7 +83,7 @@ function renderizarNav() {
   const usuario = getUsuarioConectado()
   const rol = usuario ? usuario.rol : "visitante"
 
-  document.querySelectorAll(".main-nav [data-roles]").forEach((item) => {
+  document.querySelectorAll("[data-roles]").forEach((item) => {
     const roles = item.dataset.roles.split(" ")
     const visible = roles.includes("todos") || roles.includes(rol)
     item.style.display = visible ? "" : "none"
@@ -139,6 +150,18 @@ function crearTarjetaProducto(producto) {
 
   const card = document.createElement("article")
   card.className = "card producto-card" + (agotado ? " producto-agotado" : "")
+
+  const archivoImagen = IMAGENES_PRODUCTO[producto.id]
+  if (archivoImagen) {
+    const imagen = document.createElement("img")
+    imagen.className = "producto-imagen"
+    imagen.src = rutaBase() + "assets/" + archivoImagen
+    imagen.alt = ""
+    imagen.loading = "lazy"
+    imagen.width = 180
+    imagen.height = 180
+    card.appendChild(imagen)
+  }
 
   const body = document.createElement("div")
   body.className = "card-body"
@@ -583,7 +606,7 @@ async function renderComandas() {
     art.appendChild(espera)
 
     if (pedido.estado === "pendiente") {
-      art.appendChild(botonCocina(pedido.id, "marchar", "Marchar", "btn-marchar"))
+      art.appendChild(botonCocina(pedido.id, "marchar", "Comenzar preparación", "btn-marchar"))
     }
     if (pedido.estado === "preparacion") {
       art.appendChild(botonCocina(pedido.id, "despachar", "Marcar listo", "btn-despachar"))
