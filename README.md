@@ -18,8 +18,7 @@ Prototipo web para gestionar el recorrido de compra en un local de hamburguesas:
 │   │   │   └── errores.js
 │   │   ├── repositorios/
 │   │   ├── rutas/
-│   │   ├── servicios/
-│   │   └── errores.js
+│   │   └── servicios/
 │   ├── app.js
 │   ├── package.json
 │   ├── package-lock.json
@@ -48,11 +47,9 @@ El backend sigue el patrón MVC adaptado a una API REST: la vista es el frontend
 | Capa | Carpeta | Responsabilidad |
 |---|---|---|
 | Rutas | `src/rutas/` | Asocian cada URL y método HTTP con un controlador. |
-| Controladores | `src/controladores/` | Reciben `req`, llaman al servicio y responden con `res`. Sin lógica de negocio. |
-| Servicios | `src/servicios/` | Reglas de negocio: validaciones, cálculos y errores de dominio. No conocen `req` ni `res`. |
+| Controladores | `src/controladores/` | Reciben `req`, llaman al servicio, deciden el código de estado y responden con `res`. Sin lógica de negocio. |
+| Servicios | `src/servicios/` | Reglas de negocio: validaciones y cálculos. No conocen `req` ni `res`. |
 | Repositorios | `src/repositorios/` | Único acceso a los datos. Hoy leen `datos.json`; luego se reemplazan por MongoDB sin tocar las demás capas. |
-
-El flujo de cada pedido HTTP es `ruta → controlador → servicio → repositorio`. Los errores se lanzan con `ErrorHttp` y los resuelve `src/middlewares/errores.js`.
 
 ## Requisitos
 

@@ -6,7 +6,7 @@ import rutas from "./src/rutas/index.js"
 const app = express()
 
 app.get("/api/datos", (req, res) => {
-  res.json(datos)
+  res.status(200).json(datos)
 })
 
 app.use("/api", rutas)
