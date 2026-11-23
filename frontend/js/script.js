@@ -611,20 +611,40 @@ function mensajeDeError(respuesta, porDefecto) {
 
 function renderAvisoStock(ingredientes) {
   const contenedor = document.getElementById("aviso-stock")
-  const escasos = ingredientes.filter((i) => i.nivel !== "suficiente")
+  const lista = document.getElementById("lista-ingredientes")
+  const agotados = ingredientes.filter((ingrediente) => ingrediente.nivel === "agotado")
 
-  if (escasos.length === 0) {
-    contenedor.style.display = "none"
-    return
-  }
+  contenedor.style.display = agotados.length === 0 ? "none" : ""
+  contenedor.textContent =
+    agotados.length === 0
+      ? ""
+      : "Ingredientes agotados: " + agotados.map((ingrediente) => ingrediente.nombre).join(", ")
 
-  const nombres = escasos
-    .map((i) => i.nombre + (i.nivel === "agotado" ? " (agotado)" : " (" + i.stock + ")"))
-    .join(", ")
-  contenedor.innerHTML =
-    "🟡 <strong>Aviso de stock:</strong> quedan pocas unidades de " +
-    nombres +
-    ". Avisar demoras si es necesario."
+  lista.innerHTML = ""
+  ingredientes.forEach((ingrediente) => {
+    const li = document.createElement("li")
+    li.className = "stock-" + ingrediente.nivel
+
+    const nombre = document.createElement("span")
+    nombre.className = "stock-nombre"
+    nombre.textContent = ingrediente.nombre
+
+    const stock = document.createElement("strong")
+    stock.className = "stock-cantidad"
+    stock.textContent = ingrediente.stock
+
+    const nivel = document.createElement("span")
+    nivel.className = "stock-nivel"
+    nivel.textContent =
+      ingrediente.nivel === "agotado"
+        ? "Agotado"
+        : ingrediente.nivel === "bajo"
+          ? "Bajo"
+          : "Suficiente"
+
+    li.append(nombre, stock, nivel)
+    lista.appendChild(li)
+  })
 }
 
 function crearComanda(comanda) {
@@ -827,13 +847,19 @@ async function initTablero() {
   const hasta = document.getElementById("ventas-hasta")
 
   async function cargarVentas() {
-    const parametros =
+    const parametrosFecha =
       desde.value && hasta.value
         ? "?desde=" + encodeURIComponent(desde.value) + "&hasta=" + encodeURIComponent(hasta.value)
         : ""
+    const categoria = document.getElementById("ventas-categoria").value
+    const parametrosRanking =
+      parametrosFecha +
+      (categoria
+        ? (parametrosFecha ? "&" : "?") + "categoria=" + encodeURIComponent(categoria)
+        : "")
     const [ventas, ranking] = await Promise.all([
-      llamarApi("/ventas" + parametros),
-      llamarApi("/ventas/ranking" + parametros),
+      llamarApi("/ventas" + parametrosFecha),
+      llamarApi("/ventas/ranking" + parametrosRanking),
     ])
 
     if (ventas.status === 401 || ranking.status === 401) {
@@ -925,19 +951,55 @@ async function initTablero() {
 
     if (!respuesta.ok) return
 
-    const listaStock = document.getElementById("ingredientes-bajos")
-    const escasos = respuesta.cuerpo.filter((i) => i.nivel !== "suficiente")
+    const listaStock = document.getElementById("lista-ingredientes")
+    const alerta = document.getElementById("alerta-ingredientes")
+    const agotados = respuesta.cuerpo.filter((ingrediente) => ingrediente.nivel === "agotado")
+    listaStock.innerHTML = ""
 
-    if (escasos.length === 0) {
-      listaStock.innerHTML = "<li>Todos los ingredientes con stock suficiente ✅</li>"
-      return
+    if (agotados.length === 0) {
+      alerta.style.display = "none"
+    } else {
+      alerta.style.display = ""
+      alerta.textContent =
+        "Ingredientes agotados: " + agotados.map((ingrediente) => ingrediente.nombre).join(", ")
     }
 
-    escasos.forEach((i) => {
+    respuesta.cuerpo.forEach((ingrediente) => {
       const li = document.createElement("li")
-      li.className = i.nivel === "agotado" ? "critico" : ""
-      li.textContent = i.nombre + " — " + i.stock + " unidades" + (i.nivel === "agotado" ? " (agotado)" : "")
+      li.className = "stock-" + ingrediente.nivel
+
+      const nombre = document.createElement("span")
+      nombre.className = "stock-nombre"
+      nombre.textContent = ingrediente.nombre
+
+      const stock = document.createElement("span")
+      stock.textContent = " " + ingrediente.stock + " unidades"
+
+      const nivel = document.createElement("span")
+      nivel.className = "stock-nivel"
+      nivel.textContent =
+        ingrediente.nivel === "agotado"
+          ? "Agotado"
+          : ingrediente.nivel === "bajo"
+            ? "Bajo"
+            : "Suficiente"
+
+      li.append(nombre, stock, " — ", nivel)
       listaStock.appendChild(li)
+    })
+  }
+
+  async function cargarCategorias() {
+    const respuesta = await llamarApi("/productos")
+    if (!respuesta.ok) return
+
+    const categorias = [...new Set(respuesta.cuerpo.map((producto) => producto.categoria))]
+    const selector = document.getElementById("ventas-categoria")
+    categorias.forEach((categoria) => {
+      const opcion = document.createElement("option")
+      opcion.value = categoria
+      opcion.textContent = categoria
+      selector.appendChild(opcion)
     })
   }
 
@@ -946,7 +1008,7 @@ async function initTablero() {
     cargarVentas()
   })
 
-  await Promise.all([cargarVentas(), cargarDemoras(), cargarIngredientes()])
+  await Promise.all([cargarCategorias(), cargarVentas(), cargarDemoras(), cargarIngredientes()])
   setInterval(cargarDemoras, INTERVALO_ACTUALIZACION_MS)
 }
 

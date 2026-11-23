@@ -41,6 +41,11 @@
       <form class="filtro-fechas" id="filtro-ventas">
         <label>Desde <input type="date" id="ventas-desde" required></label>
         <label>Hasta <input type="date" id="ventas-hasta" required></label>
+        <label>Categoría
+          <select id="ventas-categoria">
+            <option value="">Todas</option>
+          </select>
+        </label>
         <button type="submit" class="btn">Consultar</button>
       </form>
       <div id="tablero-aviso" role="alert"></div>
@@ -74,8 +79,9 @@
       </section>
 
       <section class="seccion columna">
-        <h2>Ingredientes por reponer</h2>
-        <ul class="lista-stock" id="ingredientes-bajos"></ul>
+        <h2>Ingredientes</h2>
+        <div class="aviso alerta-agotados" id="alerta-ingredientes" role="alert" style="display: none"></div>
+        <ul class="lista-stock" id="lista-ingredientes"></ul>
       </section>
     </div>
   </main>

@@ -78,7 +78,7 @@ Abrí `http://localhost:3000`. Para iniciarlo sin reinicio automático, ejecutá
 | GET | `/api/zonas-envio` | Zonas de entrega con su costo de envío y si tienen cobertura (`Otra` no la tiene; retiro en local = $0) |
 | GET | `/api/usuarios` | Usuarios sin credenciales (requiere token de dueño); `401` / `403` |
 | GET | `/api/usuarios/:id` | Un usuario (requiere token de dueño); `404` si no existe |
-| GET | `/api/ingredientes` | Ingredientes con `id`, stock, mínimo y `nivel` (`suficiente`, `bajo` o `agotado`) (requiere token de cocina o dueño) |
+| GET | `/api/ingredientes` | Lista completa de ingredientes con `id`, stock, mínimo y `nivel` (`suficiente`, `bajo` o `agotado`); cocina recibe los agotados primero, luego bajos y suficientes (requiere token de cocina o dueño) |
 | GET | `/api/pedidos/comandas` | Comandas activas, de la más antigua a la más reciente, con nombre de pila, hora, estado, demora y `accion` siguiente; `mensaje` si no hay ninguna (requiere token de cocina) |
 | GET | `/api/pedidos/demoras` | Pedidos activos con demora por falta de ingredientes (requiere token de dueño) |
 | GET | `/api/pedidos/propios` | Historial del cliente autenticado, del más reciente al más antiguo; filtro opcional `?estado=pendiente\|preparacion\|listo\|entregado` (requiere token de cliente); `400` si el estado no es válido |
@@ -90,4 +90,4 @@ Abrí `http://localhost:3000`. Para iniciarlo sin reinicio automático, ejecutá
 | POST | `/api/auth/logout` | Cierra la sesión (requiere token); `204` |
 | GET | `/api/auth/sesion` | Devuelve el usuario de la sesión vigente (requiere token); `401` si no existe o expiró |
 | GET | `/api/ventas` | Resumen del período `?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` (por defecto, hoy): pedidos por estado, facturación y ticket promedio de los entregados (requiere token de dueño); `400` si las fechas no son válidas |
-| GET | `/api/ventas/ranking` | Productos más vendidos del período, con el mismo filtro `desde` y `hasta` (requiere token de dueño); `400` si las fechas no son válidas |
+| GET | `/api/ventas/ranking` | Productos más vendidos del período, con filtros opcionales `desde`, `hasta` y `categoria` (`Hamburguesas`, `Acompañamientos` o `Bebidas`) (requiere token de dueño); `400` si las fechas o la categoría no son válidas |

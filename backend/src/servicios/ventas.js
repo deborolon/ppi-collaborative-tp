@@ -1,6 +1,7 @@
 import * as repositorio from "../repositorios/pedidos.js"
 import { esFechaValida, fechaDe } from "./fechas.js"
 import { ESTADOS } from "./pedidos.js"
+import * as productos from "./productos.js"
 
 const MENSAJE_SIN_VENTAS = "No se registran ventas para la fecha seleccionada"
 const MENSAJE_SIN_RANKING =
@@ -55,18 +56,28 @@ export async function resumir(desde, hasta) {
   }
 }
 
-export async function rankear(desde, hasta) {
+export async function rankear(desde, hasta, categoria) {
   const periodo = resolverPeriodo(desde, hasta)
 
   if (periodo.error) {
     return invalido(periodo.error)
   }
 
+  const catalogo = await productos.listar()
+  const categoriasValidas = [...new Set(catalogo.map((producto) => producto.categoria))]
+
+  if (categoria !== undefined && !categoriasValidas.includes(categoria)) {
+    return invalido("La categoría indicada no es válida.")
+  }
+
+  const categoriaPorProducto = new Map(catalogo.map((producto) => [producto.id, producto.categoria]))
   const pedidos = await pedidosDelPeriodo(periodo)
   const unidades = new Map()
 
   for (const pedido of pedidos.filter((actual) => actual.estado === "entregado")) {
     for (const { productoId, nombre, cantidad } of pedido.items) {
+      if (categoria !== undefined && categoriaPorProducto.get(productoId) !== categoria) continue
+
       const actual = unidades.get(productoId) ?? { productoId, nombre, unidades: 0 }
       actual.unidades += cantidad
       unidades.set(productoId, actual)

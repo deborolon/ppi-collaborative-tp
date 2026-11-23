@@ -11,7 +11,7 @@ export async function resumir(req, res) {
 }
 
 export async function rankear(req, res) {
-  const resultado = await servicio.rankear(req.query.desde, req.query.hasta)
+  const resultado = await servicio.rankear(req.query.desde, req.query.hasta, req.query.categoria)
 
   if (resultado.estado === "invalido") {
     return res.status(400).json({ error: resultado.error })
