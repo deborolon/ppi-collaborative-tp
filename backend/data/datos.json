@@ -1,9 +1,4 @@
 {
-  "beneficios": [
-    { "id": 1, "icono": "🍔", "titulo": "Elegí visualmente", "texto": "Armá tu pedido viendo cada producto y su precio en tiempo real" },
-    { "id": 2, "icono": "⏱️", "titulo": "Sin esperas al teléfono", "texto": "Nada de líneas ocupadas: cargás tu dirección y confirmás en segundos!" },
-    { "id": 3, "icono": "🧾", "titulo": "Ticket digital", "texto": "Recibí el detalle de tu compra y el tiempo estimado de demora" }
-  ],
   "usuarios": [
     { "id": 1, "nombre": "Rocío", "apellido": "Gómez", "email": "rocio.gomez@mail.com", "password": "cliente123", "rol": "cliente" },
     { "id": 2, "nombre": "Martín", "apellido": "Díaz", "email": "martin.diaz@mail.com", "password": "cliente123", "rol": "cliente" },

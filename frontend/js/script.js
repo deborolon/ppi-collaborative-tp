@@ -51,7 +51,6 @@ async function getDatos() {
   return {
     usuarios: base.usuarios,
     zonasEnvio: base.zonasEnvio,
-    beneficios: base.beneficios,
     productos: JSON.parse(localStorage.getItem(LS.productos)),
     ingredientes: JSON.parse(localStorage.getItem(LS.ingredientes)),
     pedidos: JSON.parse(localStorage.getItem(LS.pedidos)),
@@ -191,31 +190,6 @@ function crearTarjetaProducto(producto) {
 
   card.appendChild(body)
   return card
-}
-
-async function initInicio() {
-  const contenedor = document.getElementById("beneficios-lista")
-  if (!contenedor) return
-
-  const datos = await getDatos()
-  datos.beneficios.forEach((b) => {
-    const card = document.createElement("article")
-    card.className = "card"
-
-    const body = document.createElement("div")
-    body.className = "card-body"
-
-    const h3 = document.createElement("h3")
-    h3.textContent = b.icono + " " + b.titulo
-    body.appendChild(h3)
-
-    const p = document.createElement("p")
-    p.textContent = b.texto
-    body.appendChild(p)
-
-    card.appendChild(body)
-    contenedor.appendChild(card)
-  })
 }
 
 async function initLogin() {
@@ -716,7 +690,6 @@ if (protegerPagina()) {
 
   const pagina = document.body.dataset.page
   const rutas = {
-    inicio: initInicio,
     login: initLogin,
     menu: initMenu,
     pedido: initPedido,
