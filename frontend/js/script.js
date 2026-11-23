@@ -13,6 +13,10 @@ const LS = {
 
 const COLOR_ESTADO = { pendiente: "rojo", preparacion: "amarillo", listo: "verde" }
 
+const CLASE_BOTON_ESTADO = { preparacion: "btn-marchar", listo: "btn-despachar", entregado: "btn-despachar" }
+
+const INTERVALO_ACTUALIZACION_MS = 5000
+
 const ETIQUETA_ESTADO = {
   pendiente: "En espera",
   preparacion: "En preparación",
@@ -403,10 +407,10 @@ async function initPedido() {
   })
 }
 
-function mostrarAvisoPedido(texto, clase) {
-  const aviso = document.getElementById("pedido-aviso")
+function mostrarAviso(id, texto, clase) {
+  const aviso = document.getElementById(id)
   aviso.textContent = texto
-  aviso.className = clase
+  aviso.className = texto ? clase : ""
 }
 
 async function precargarRepeticion(pedidoId) {
@@ -418,7 +422,8 @@ async function precargarRepeticion(pedidoId) {
   }
 
   if (!respuesta.ok) {
-    mostrarAvisoPedido(
+    mostrarAviso(
+      "pedido-aviso",
       (respuesta.cuerpo && respuesta.cuerpo.error) || "No pudimos cargar el pedido anterior.",
       "aviso aviso-error"
     )
@@ -433,7 +438,7 @@ async function precargarRepeticion(pedidoId) {
     if (input) input.value = item.cantidad
   })
 
-  if (mensaje) mostrarAvisoPedido(mensaje, "aviso")
+  if (mensaje) mostrarAviso("pedido-aviso", mensaje, "aviso")
 }
 
 function crearItemPedido(producto) {
@@ -644,124 +649,156 @@ function crearTarjetaPedido(pedido) {
   return card
 }
 
-async function initCocina() {
-  const contenedor = document.getElementById("comandas")
-  if (!contenedor) return
-
-  await renderComandas()
-  await renderAvisoStock()
-
-  contenedor.addEventListener("click", async function (e) {
-    const boton = e.target.closest("[data-accion]")
-    if (!boton) return
-    cambiarEstadoPedido(boton.dataset.pedido, boton.dataset.accion)
-    await renderComandas()
-  })
+function mensajeDeError(respuesta, porDefecto) {
+  return (respuesta.cuerpo && respuesta.cuerpo.error) || porDefecto
 }
 
-async function renderComandas() {
-  const contenedor = document.getElementById("comandas")
-  contenedor.innerHTML = ""
-  const datos = await getDatos()
-
-  const activas = datos.pedidos.filter((p) => p.estado !== "entregado")
-
-  if (activas.length === 0) {
-    contenedor.innerHTML = "<p>No hay comandas activas en este momento.</p>"
-    return
-  }
-
-  activas.forEach((pedido) => {
-    const cliente = datos.usuarios.find((u) => u.id === pedido.clienteId)
-
-    const nombrePila = cliente ? cliente.nombre : "Cliente"
-
-    const art = document.createElement("article")
-    art.className = "comanda " + (COLOR_ESTADO[pedido.estado] || "")
-
-    const h3 = document.createElement("h3")
-    h3.textContent = "#" + pedido.id + " · " + nombrePila
-    art.appendChild(h3)
-
-    const pEstado = document.createElement("p")
-    const badge = document.createElement("span")
-    badge.className = "estado estado-" + pedido.estado
-    badge.textContent =
-      pedido.estado === "pendiente" ? "Prioridad alta" : ETIQUETA_ESTADO[pedido.estado]
-    pEstado.appendChild(badge)
-    art.appendChild(pEstado)
-
-    const ul = document.createElement("ul")
-    pedido.items.forEach((i) => {
-      const li = document.createElement("li")
-      li.textContent = i.cantidad + "× " + i.nombre
-      ul.appendChild(li)
-    })
-    art.appendChild(ul)
-
-    const espera = document.createElement("p")
-    espera.innerHTML = "<strong>Espera:</strong> " + pedido.esperaMin + " min"
-    art.appendChild(espera)
-
-    if (pedido.estado === "pendiente") {
-      art.appendChild(botonCocina(pedido.id, "marchar", "Comenzar preparación", "btn-marchar"))
-    }
-    if (pedido.estado === "preparacion") {
-      art.appendChild(botonCocina(pedido.id, "despachar", "Marcar listo", "btn-despachar"))
-    }
-    if (pedido.estado === "listo") {
-      art.appendChild(botonCocina(pedido.id, "entregar", "Despachar", "btn-despachar"))
-    }
-
-    contenedor.appendChild(art)
-  })
-}
-
-function botonCocina(pedidoId, accion, texto, clase) {
-  const btn = document.createElement("button")
-  btn.type = "button"
-  btn.className = "btn btn-cocina " + clase
-  btn.setAttribute("data-pedido", pedidoId)
-  btn.setAttribute("data-accion", accion)
-  btn.textContent = texto
-  return btn
-}
-
-function cambiarEstadoPedido(pedidoId, accion) {
-  const pedidos = JSON.parse(localStorage.getItem(LS.pedidos))
-  const pedido = pedidos.find((p) => p.id === pedidoId)
-  if (!pedido) return
-
-  const transiciones = {
-    marchar: "preparacion",
-    despachar: "listo",
-    entregar: "entregado",
-  }
-  pedido.estado = transiciones[accion] || pedido.estado
-  if (pedido.estado === "preparacion") pedido.esperaMin = 8
-  if (pedido.estado === "listo") pedido.esperaMin = 1
-  if (pedido.estado === "entregado") pedido.esperaMin = 0
-
-  guardarPedidos(pedidos)
-}
-
-async function renderAvisoStock() {
+function renderAvisoStock(ingredientes) {
   const contenedor = document.getElementById("aviso-stock")
-  if (!contenedor) return
-  const datos = await getDatos()
-  const bajos = datos.ingredientes.filter((i) => i.stock <= i.minimo)
+  const escasos = ingredientes.filter((i) => i.nivel !== "suficiente")
 
-  if (bajos.length === 0) {
+  if (escasos.length === 0) {
     contenedor.style.display = "none"
     return
   }
-  const nombres = bajos
-    .map((i) => i.nombre + (i.stock === 0 ? " (agotado)" : " (" + i.stock + ")"))
+
+  const nombres = escasos
+    .map((i) => i.nombre + (i.nivel === "agotado" ? " (agotado)" : " (" + i.stock + ")"))
     .join(", ")
   contenedor.innerHTML =
     "🟡 <strong>Aviso de stock:</strong> quedan pocas unidades de " +
     nombres +
     ". Avisar demoras si es necesario."
+}
+
+function crearComanda(comanda) {
+  const articulo = document.createElement("article")
+  articulo.className = "comanda " + (COLOR_ESTADO[comanda.estado] || "")
+
+  const titulo = document.createElement("h3")
+  titulo.textContent = "#" + comanda.id + " · " + comanda.nombre
+  articulo.appendChild(titulo)
+
+  const estado = document.createElement("p")
+  const insignia = document.createElement("span")
+  insignia.className = "estado estado-" + comanda.estado
+  insignia.textContent = ETIQUETA_ESTADO[comanda.estado] || comanda.estado
+  estado.appendChild(insignia)
+  articulo.appendChild(estado)
+
+  const ingreso = document.createElement("p")
+  ingreso.innerHTML = "<strong>Ingreso:</strong> " + comanda.hora
+  articulo.appendChild(ingreso)
+
+  const lista = document.createElement("ul")
+  comanda.items.forEach((item) => {
+    const li = document.createElement("li")
+    li.textContent = item.cantidad + "× " + item.nombre
+    lista.appendChild(li)
+  })
+  articulo.appendChild(lista)
+
+  const espera = document.createElement("p")
+  espera.innerHTML = "<strong>Espera:</strong> " + comanda.esperaMin + " min"
+  articulo.appendChild(espera)
+
+  if (comanda.accion) {
+    articulo.appendChild(
+      botonCocina(comanda.id, comanda.accion.estado, comanda.accion.texto, CLASE_BOTON_ESTADO[comanda.accion.estado])
+    )
+  }
+
+  return articulo
+}
+
+function botonCocina(pedidoId, estado, texto, clase) {
+  const boton = document.createElement("button")
+  boton.type = "button"
+  boton.className = "btn btn-cocina " + clase
+  boton.dataset.pedido = pedidoId
+  boton.dataset.estado = estado
+  boton.textContent = texto
+  return boton
+}
+
+async function initCocina() {
+  const contenedor = document.getElementById("comandas")
+  if (!contenedor) return
+
+  let consultaActual = 0
+  let vistaActual = ""
+
+  async function cargarComandas() {
+    const consulta = ++consultaActual
+    const respuesta = await llamarApi("/pedidos/comandas")
+
+    if (consulta !== consultaActual) return
+
+    if (respuesta.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    if (!respuesta.ok) {
+      vistaActual = ""
+      contenedor.innerHTML = "<p>No pudimos cargar las comandas. Intentá de nuevo en unos minutos.</p>"
+      return
+    }
+
+    const vista = JSON.stringify(respuesta.cuerpo)
+    if (vista === vistaActual) return
+    vistaActual = vista
+
+    contenedor.innerHTML = ""
+
+    if (respuesta.cuerpo.mensaje) {
+      const mensaje = document.createElement("p")
+      mensaje.textContent = respuesta.cuerpo.mensaje
+      contenedor.appendChild(mensaje)
+      return
+    }
+
+    respuesta.cuerpo.comandas.forEach((comanda) => contenedor.appendChild(crearComanda(comanda)))
+  }
+
+  const ingredientes = await llamarApi("/ingredientes")
+
+  if (ingredientes.status === 401) {
+    volverAlLogin()
+    return
+  }
+
+  if (ingredientes.ok) {
+    renderAvisoStock(ingredientes.cuerpo)
+
+  }
+
+  contenedor.addEventListener("click", async function (e) {
+    const avance = e.target.closest("button[data-estado]")
+
+    if (avance) {
+      avance.disabled = true
+      const respuesta = await llamarApi(
+        "/pedidos/" + encodeURIComponent(avance.dataset.pedido) + "/estado",
+        { method: "PATCH", body: JSON.stringify({ estado: avance.dataset.estado }) }
+      )
+
+      if (respuesta.status === 401) {
+        volverAlLogin()
+        return
+      }
+
+      mostrarAviso(
+        "cocina-aviso",
+        respuesta.ok ? "" : mensajeDeError(respuesta, "No pudimos actualizar el pedido."),
+        "aviso aviso-error"
+      )
+      await cargarComandas()
+    }
+  })
+
+  await cargarComandas()
+  setInterval(cargarComandas, INTERVALO_ACTUALIZACION_MS)
 }
 
 async function initTablero() {

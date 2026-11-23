@@ -14,6 +14,28 @@ export async function obtener(req, res) {
   res.status(200).json(pedido)
 }
 
+export async function listarComandas(req, res) {
+  res.status(200).json(await servicio.listarComandas())
+}
+
+export async function actualizarEstado(req, res) {
+  const resultado = await servicio.actualizarEstado(req.params.id, req.body?.estado)
+
+  if (resultado.estado === "invalido") {
+    return res.status(400).json({ error: resultado.error })
+  }
+
+  if (resultado.estado === "no-encontrado") {
+    return res.status(404).json({ error: "Pedido no encontrado." })
+  }
+
+  if (resultado.estado !== "ok") {
+    return res.status(409).json({ error: resultado.error })
+  }
+
+  res.status(200).json(resultado.pedido)
+}
+
 export async function listarPropios(req, res) {
   const resultado = await servicio.listarDeCliente(req.usuario, req.query.estado)
 
