@@ -13,3 +13,17 @@ export async function obtener(req, res) {
 
   res.status(200).json(pedido)
 }
+
+export async function crear(req, res) {
+  const resultado = await servicio.crear(req.usuario, req.body)
+
+  if (resultado.estado === "invalido") {
+    return res.status(400).json({ error: resultado.error })
+  }
+
+  if (resultado.estado !== "ok") {
+    return res.status(409).json({ error: resultado.error })
+  }
+
+  res.status(201).json(resultado.pedido)
+}

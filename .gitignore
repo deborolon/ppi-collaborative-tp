@@ -5,3 +5,5 @@ node_modules/
 .env.production
 backend/data/sesiones.json
 backend/data/intentos.json
+backend/data/productos.json
+backend/data/pedidos.json

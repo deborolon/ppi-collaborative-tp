@@ -66,6 +66,28 @@ function guardarPedidos(pedidos) {
   localStorage.setItem(LS.pedidos, JSON.stringify(pedidos))
 }
 
+async function registrarPedidoLocal(pedido) {
+  const datos = await getDatos()
+
+  if (!datos.pedidos.some((actual) => actual.id === pedido.id)) {
+    datos.pedidos.push(pedido)
+    guardarPedidos(datos.pedidos)
+  }
+}
+
+async function llamarApi(ruta, opciones = {}) {
+  const token = localStorage.getItem(LS.token)
+  const encabezados = {}
+
+  if (opciones.body) encabezados["Content-Type"] = "application/json"
+  if (token) encabezados.Authorization = "Bearer " + token
+
+  const respuesta = await fetch("/api" + ruta, { ...opciones, headers: encabezados })
+  const cuerpo = await respuesta.json().catch(() => null)
+
+  return { ok: respuesta.ok, status: respuesta.status, cuerpo }
+}
+
 function getUsuarioConectado() {
   return JSON.parse(localStorage.getItem(LS.usuario) || "null")
 }
@@ -163,8 +185,15 @@ async function initMenu() {
   const contenedor = document.getElementById("menu-lista")
   if (!contenedor) return
 
-  const datos = await getDatos()
-  const categorias = [...new Set(datos.productos.map((p) => p.categoria))]
+  const respuesta = await llamarApi("/productos")
+
+  if (!respuesta.ok) {
+    contenedor.innerHTML = "<p>No pudimos cargar el menú. Intentá de nuevo en unos minutos.</p>"
+    return
+  }
+
+  const productos = respuesta.cuerpo
+  const categorias = [...new Set(productos.map((p) => p.categoria))]
 
   categorias.forEach((categoria) => {
     const seccion = document.createElement("section")
@@ -177,7 +206,7 @@ async function initMenu() {
     const grilla = document.createElement("div")
     grilla.className = "grilla"
 
-    datos.productos
+    productos
       .filter((p) => p.categoria === categoria)
       .forEach((p) => grilla.appendChild(crearTarjetaProducto(p)))
 
@@ -282,10 +311,20 @@ async function initPedido() {
   const contenedor = document.getElementById("pedido-productos")
   if (!contenedor) return
 
-  const datos = await getDatos()
-  const usuario = getUsuarioConectado()
+  const [respuestaProductos, respuestaZonas] = await Promise.all([
+    llamarApi("/productos"),
+    llamarApi("/zonas-envio"),
+  ])
 
-  const categorias = [...new Set(datos.productos.map((p) => p.categoria))]
+  if (!respuestaProductos.ok || !respuestaZonas.ok) {
+    contenedor.innerHTML = "<p>No pudimos cargar el menú. Intentá de nuevo en unos minutos.</p>"
+    return
+  }
+
+  const productos = respuestaProductos.cuerpo
+  const zonasEnvio = respuestaZonas.cuerpo
+
+  const categorias = [...new Set(productos.map((p) => p.categoria))]
   categorias.forEach((categoria) => {
     const seccion = document.createElement("section")
     seccion.className = "seccion"
@@ -297,7 +336,7 @@ async function initPedido() {
     const grilla = document.createElement("div")
     grilla.className = "grilla"
 
-    datos.productos
+    productos
       .filter((p) => p.categoria === categoria)
       .forEach((p) => grilla.appendChild(crearItemPedido(p)))
 
@@ -306,7 +345,7 @@ async function initPedido() {
   })
 
   const selectZona = document.getElementById("zona")
-  datos.zonasEnvio
+  zonasEnvio
     .filter((z) => z.id !== "takeaway")
     .forEach((z) => {
       const opt = document.createElement("option")
@@ -315,59 +354,69 @@ async function initPedido() {
       selectZona.appendChild(opt)
     })
 
-  const recalcular = () => actualizarResumen(datos)
+  const recalcular = () => actualizarResumen(zonasEnvio)
   contenedor.addEventListener("input", recalcular)
   document.querySelectorAll("[name='modalidad']").forEach((r) =>
     r.addEventListener("change", recalcular)
   )
   selectZona.addEventListener("change", recalcular)
-  actualizarResumen(datos)
+  actualizarResumen(zonasEnvio)
 
-  document.getElementById("form-pedido").addEventListener("submit", function (e) {
+  document.getElementById("form-pedido").addEventListener("submit", async function (e) {
     e.preventDefault()
+    const error = document.getElementById("pedido-error")
+    const boton = this.querySelector("button[type='submit']")
     const items = leerItemsSeleccionados()
 
+    error.textContent = ""
+
     if (items.length === 0) {
-      document.getElementById("pedido-error").textContent =
-        "Elegí al menos un producto para confirmar la compra."
+      error.textContent = "Elegí al menos un producto para confirmar la compra."
       return
     }
 
     const modalidad = document.querySelector("[name='modalidad']:checked").value
     const direccion = document.getElementById("direccion").value.trim()
-        document.getElementById("pedido-error").textContent = ""
 
-       if (modalidad === "delivery" && direccion === "") {
-        document.getElementById("pedido-error").textContent =
-        "Ingresá la dirección de entrega para confirmar el pedido."
-         return
-        }
-    const zonaId = modalidad === "delivery" ? selectZona.value : "takeaway"
-    const zona = datos.zonasEnvio.find((z) => z.id === zonaId)
-    const subtotal = items.reduce((s, i) => s + i.precio * i.cantidad, 0)
-    const costoEnvio = zona ? zona.costo : 0
-
-    const nuevoPedido = {
-      id: "BC-" + Math.floor(1000 + Math.random() * 9000),
-      clienteId: usuario ? usuario.id : 0,
-      items: items,
-      modalidad: modalidad,
-      zonaId: zonaId,
-      direccion: document.getElementById("direccion").value.trim(),
-      costoEnvio: costoEnvio,
-      subtotal: subtotal,
-      total: subtotal + costoEnvio,
-      estado: "pendiente",
-      fecha: new Date().toISOString().slice(0, 10),
-      esperaMin: 15,
+    if (modalidad === "delivery" && direccion === "") {
+      error.textContent = "Ingresá la dirección de entrega para confirmar el pedido."
+      return
     }
 
-    const pedidos = JSON.parse(localStorage.getItem(LS.pedidos))
-    pedidos.push(nuevoPedido)
-    guardarPedidos(pedidos)
-    localStorage.setItem(LS.ultimoPedido, JSON.stringify(nuevoPedido))
+    boton.disabled = true
 
-    window.location.href = rutaBase() + "pages/confirmacion.html"
+    let respuesta
+    try {
+      respuesta = await llamarApi("/pedidos", {
+        method: "POST",
+        body: JSON.stringify({
+          items: items.map(({ productoId, cantidad, precio }) => ({ productoId, cantidad, precio })),
+          modalidad,
+          zonaId: modalidad === "delivery" ? selectZona.value : "takeaway",
+          direccion,
+        }),
+      })
+    } catch (excepcion) {
+      console.error(excepcion)
+    }
+
+    if (respuesta && respuesta.ok) {
+      await registrarPedidoLocal(respuesta.cuerpo)
+      localStorage.setItem(LS.ultimoPedido, JSON.stringify(respuesta.cuerpo))
+      window.location.href = rutaBase() + "pages/confirmacion.html"
+      return
+    }
+
+    if (respuesta && respuesta.status === 401) {
+      limpiarSesionLocal()
+      window.location.href = rutaBase() + "pages/login.html"
+      return
+    }
+
+    error.textContent =
+      (respuesta && respuesta.cuerpo && respuesta.cuerpo.error) ||
+      "No pudimos registrar el pedido. Intentá de nuevo."
+    boton.disabled = false
   })
 }
 
@@ -424,7 +473,7 @@ function leerItemsSeleccionados() {
   return items
 }
 
-function actualizarResumen(datos) {
+function actualizarResumen(zonasEnvio) {
   const items = leerItemsSeleccionados()
   const subtotal = items.reduce((s, i) => s + i.precio * i.cantidad, 0)
 
@@ -434,7 +483,7 @@ function actualizarResumen(datos) {
 
   let costoEnvio = 0
   if (modalidad === "delivery") {
-    const zona = datos.zonasEnvio.find((z) => z.id === selectZona.value)
+    const zona = zonasEnvio.find((z) => z.id === selectZona.value)
     costoEnvio = zona ? zona.costo : 0
     selectZona.disabled = false
     if (campoDireccion) campoDireccion.style.display = ""

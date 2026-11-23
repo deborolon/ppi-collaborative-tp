@@ -40,7 +40,7 @@ Prototipo web para gestionar el recorrido de compra en un local de hamburguesas:
 
 - **Frontend:** páginas HTML, estilos y JavaScript en `frontend/`. `frontend/assets/` contiene el logo y las ilustraciones SVG del menú y la portada.
 - **Backend:** servidor Node.js con Express en `backend/`. Sirve el frontend y expone la API REST bajo `/api`, organizada en capas (ver [Arquitectura del backend](#arquitectura-del-backend)).
-- **Datos:** por ahora se mantienen en el archivo JSON `backend/data/datos.json`; no se utiliza una base de datos. Los pedidos y cambios locales siguen guardándose en `localStorage` del navegador.
+- **Datos:** `backend/data/datos.json` es la semilla; no se utiliza una base de datos. El stock y los pedidos nuevos se guardan en `backend/data/productos.json` y `backend/data/pedidos.json` (se generan solos, no se versionan; borrarlos restaura la semilla). El historial, las comandas y el tablero todavía leen `localStorage` del navegador.
 
 ## Arquitectura del backend
 
@@ -51,7 +51,7 @@ El backend sigue el patrón MVC adaptado a una API REST: la vista es el frontend
 | Rutas | `src/rutas/` | Asocian cada URL y método HTTP con un controlador. |
 | Controladores | `src/controladores/` | Reciben `req`, llaman al servicio, deciden el código de estado y responden con `res`. Sin lógica de negocio. |
 | Servicios | `src/servicios/` | Reglas de negocio: validaciones y cálculos. No conocen `req` ni `res`. |
-| Repositorios | `src/repositorios/` | Único acceso a los datos. Hoy leen `datos.json` y escriben sesiones e intentos en archivos JSON (`almacen-json.js` serializa y escribe de forma atómica); luego se reemplazan por MongoDB sin tocar las demás capas. |
+| Repositorios | `src/repositorios/` | Único acceso a los datos. Hoy leen `datos.json` como semilla y guardan sesiones, intentos, stock y pedidos en archivos JSON (`almacen-json.js` serializa y escribe de forma atómica); luego se reemplazan por MongoDB sin tocar las demás capas. |
 
 ## Requisitos
 
@@ -89,6 +89,7 @@ Abrí `http://localhost:3000`. Para iniciarlo sin reinicio automático, ejecutá
 | GET | `/api/ingredientes` | Stock y mínimo de cada ingrediente (requiere token de cocina o dueño) |
 | GET | `/api/pedidos` | Todos los pedidos (requiere token de cocina o dueño) |
 | GET | `/api/pedidos/:id` | Un pedido (requiere token de cocina o dueño); `404` si no existe |
+| POST | `/api/pedidos` | Crea un pedido del cliente con `{ items: [{ productoId, cantidad }], modalidad, zonaId, direccion }` (requiere token de cliente). Calcula precios y envío en el servidor y descuenta el stock; `201` con el pedido en estado `pendiente`, `400` si los datos no son válidos, `409` si falta stock o un precio cambió |
 | POST | `/api/auth/login` | Inicia sesión con `{ email, password }` y devuelve `{ token, usuario }`; `401` si son incorrectas, `429` si la cuenta está bloqueada |
 | POST | `/api/auth/logout` | Cierra la sesión (requiere token); `204` |
 | GET | `/api/auth/sesion` | Devuelve el usuario de la sesión vigente (requiere token); `401` si no existe o expiró |
@@ -111,7 +112,7 @@ Los errores se devuelven como JSON: `{ "error": "mensaje" }`.
 
 ## Deploy en Netlify
 
-`netlify.toml` publica `frontend/`, instala las dependencias de `backend/` y despliega la API Express como una Netlify Function. El login necesita escribir en `backend/data/`, así que por ahora solo funciona con el servidor local (`npm start`).
+`netlify.toml` publica `frontend/`, instala las dependencias de `backend/` y despliega la API Express como una Netlify Function. El login y los pedidos necesitan escribir en `backend/data/`, así que por ahora solo funcionan con el servidor local (`npm start`).
 
 ## Funcionalidades
 
