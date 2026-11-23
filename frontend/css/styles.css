@@ -596,6 +596,76 @@ p {
   color: var(--rojo-oscuro);
 }
 
+.lista-stock li.stock-suficiente {
+  border-left-color: var(--verde);
+  background: var(--verde-suave);
+}
+
+.lista-stock li.stock-bajo {
+  border-left-color: var(--amarillo);
+  background: var(--amarillo-suave);
+  color: var(--oscuro);
+}
+
+.lista-stock li.stock-agotado {
+  border-left-color: var(--rojo);
+  background: var(--rojo-suave);
+  color: var(--rojo-oscuro);
+}
+
+.stock-nombre {
+  font-weight: 700;
+}
+
+.stock-nivel {
+  float: right;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.stock-cantidad {
+  display: block;
+  font-size: 2rem;
+  line-height: 1.2;
+  color: var(--oscuro);
+}
+
+.lista-stock-cocina {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 0.8rem;
+}
+
+.lista-stock-cocina li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  min-height: 112px;
+  margin-bottom: 0;
+  padding: 1rem;
+}
+
+.lista-stock-cocina .stock-nombre {
+  grid-column: 1 / -1;
+}
+
+.lista-stock-cocina .stock-cantidad {
+  grid-column: 1;
+}
+
+.lista-stock-cocina .stock-nivel {
+  grid-column: 2;
+  float: none;
+  align-self: end;
+}
+
+.alerta-agotados {
+  background: var(--rojo-suave);
+  border-left-color: var(--rojo);
+  color: var(--rojo-oscuro);
+  font-weight: 800;
+}
+
 :focus-visible {
   outline: 3px solid rgba(183, 71, 56, 0.55);
   outline-offset: 3px;
