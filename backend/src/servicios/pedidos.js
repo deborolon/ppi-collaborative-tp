@@ -79,14 +79,6 @@ async function resolverEntrega(modalidad, zonaId, direccion) {
   return { zonaId: zona.id, direccion: direccionLimpia, costoEnvio: zona.costo }
 }
 
-export async function listar() {
-  return await repositorio.listar()
-}
-
-export async function obtener(id) {
-  return await repositorio.buscarPorId(id)
-}
-
 export async function listarComandas() {
   const [pedidos, clientes, catalogo] = await Promise.all([
     repositorio.listar(),

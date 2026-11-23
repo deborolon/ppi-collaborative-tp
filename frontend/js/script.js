@@ -5,9 +5,6 @@ function rutaBase() {
 const LS = {
   usuario: "bc_usuario",
   token: "bc_token",
-  pedidos: "bc_pedidos",
-  productos: "bc_productos",
-  ingredientes: "bc_ingredientes",
   ultimoPedido: "bc_ultimo_pedido",
 }
 
@@ -24,48 +21,8 @@ const ETIQUETA_ESTADO = {
   entregado: "Entregado",
 }
 
-async function cargarDatosIniciales() {
-  const respuesta = await fetch("/api/datos")
-  return await respuesta.json()
-}
-
-async function getDatos() {
-  const base = await cargarDatosIniciales()
-
-  if (!localStorage.getItem(LS.pedidos)) {
-    localStorage.setItem(LS.pedidos, JSON.stringify(base.pedidos))
-  }
-  if (!localStorage.getItem(LS.productos)) {
-    localStorage.setItem(LS.productos, JSON.stringify(base.productos))
-  }
-  if (!localStorage.getItem(LS.ingredientes)) {
-    localStorage.setItem(LS.ingredientes, JSON.stringify(base.ingredientes))
-  }
-
-  return {
-    usuarios: base.usuarios,
-    zonasEnvio: base.zonasEnvio,
-    productos: JSON.parse(localStorage.getItem(LS.productos)),
-    ingredientes: JSON.parse(localStorage.getItem(LS.ingredientes)),
-    pedidos: JSON.parse(localStorage.getItem(LS.pedidos)),
-  }
-}
-
 function formatearPrecio(valor) {
   return "$" + valor.toLocaleString("es-AR")
-}
-
-function guardarPedidos(pedidos) {
-  localStorage.setItem(LS.pedidos, JSON.stringify(pedidos))
-}
-
-async function registrarPedidoLocal(pedido) {
-  const datos = await getDatos()
-
-  if (!datos.pedidos.some((actual) => actual.id === pedido.id)) {
-    datos.pedidos.push(pedido)
-    guardarPedidos(datos.pedidos)
-  }
 }
 
 async function llamarApi(ruta, opciones = {}) {
@@ -389,7 +346,6 @@ async function initPedido() {
     }
 
     if (respuesta && respuesta.ok) {
-      await registrarPedidoLocal(respuesta.cuerpo)
       localStorage.setItem(LS.ultimoPedido, JSON.stringify(respuesta.cuerpo))
       window.location.href = rutaBase() + "pages/confirmacion.html"
       return

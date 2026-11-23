@@ -1,6 +1,5 @@
 import { Router } from "express"
 import auth from "./auth.js"
-import datos from "./datos.js"
 import health from "./health.js"
 import ingredientes from "./ingredientes.js"
 import pedidos from "./pedidos.js"
@@ -12,7 +11,6 @@ import zonasEnvio from "./zonas-envio.js"
 const rutas = Router()
 
 rutas.use("/auth", auth)
-rutas.use("/datos", datos)
 rutas.use("/health", health)
 rutas.use("/ingredientes", ingredientes)
 rutas.use("/pedidos", pedidos)
