@@ -7,6 +7,7 @@ const MAXIMO_DIRECCION = 200
 const ZONA_HORARIA = "America/Argentina/Buenos_Aires"
 const ESTADOS = ["pendiente", "preparacion", "listo", "entregado"]
 const MENSAJE_NO_DISPONIBLES = "Uno o más productos del pedido original no están disponibles actualmente."
+const MENSAJE_FUERA_DE_COBERTURA = "La dirección ingresada se encuentra fuera de la zona de cobertura"
 
 const formatoFecha = new Intl.DateTimeFormat("en-CA", { timeZone: ZONA_HORARIA })
 const formatoHora = new Intl.DateTimeFormat("en-GB", {
@@ -44,6 +45,10 @@ async function resolverEntrega(modalidad, zonaId, direccion) {
 
   if (!zona || zona.id === "takeaway") {
     return { error: "Elegí una zona de envío válida." }
+  }
+
+  if (!zona.cubierta) {
+    return { error: MENSAJE_FUERA_DE_COBERTURA }
   }
 
   const direccionLimpia = typeof direccion === "string" ? direccion.trim() : ""

@@ -11,6 +11,7 @@ const LS = {
   ultimoPedido: "bc_ultimo_pedido",
 }
 
+const MENSAJE_FUERA_DE_COBERTURA = "La dirección ingresada se encuentra fuera de la zona de cobertura"
 const COLOR_ESTADO = { pendiente: "rojo", preparacion: "amarillo", listo: "verde" }
 
 const IMAGENES_PRODUCTO = {
@@ -355,7 +356,7 @@ async function initPedido() {
     .forEach((z) => {
       const opt = document.createElement("option")
       opt.value = z.id
-      opt.textContent = z.nombre + " — " + formatearPrecio(z.costo)
+      opt.textContent = z.cubierta ? z.nombre + " — " + formatearPrecio(z.costo) : z.nombre
       selectZona.appendChild(opt)
     })
 
@@ -531,7 +532,7 @@ function actualizarResumen(zonasEnvio) {
   let costoEnvio = 0
   if (modalidad === "delivery") {
     const zona = zonasEnvio.find((z) => z.id === selectZona.value)
-    costoEnvio = zona ? zona.costo : 0
+    costoEnvio = zona && zona.cubierta ? zona.costo : 0
     selectZona.disabled = false
     if (campoDireccion) campoDireccion.style.display = ""
   } else {
@@ -542,6 +543,23 @@ function actualizarResumen(zonasEnvio) {
   document.getElementById("resumen-subtotal").textContent = formatearPrecio(subtotal)
   document.getElementById("resumen-envio").textContent = formatearPrecio(costoEnvio)
   document.getElementById("resumen-total").textContent = formatearPrecio(subtotal + costoEnvio)
+
+  validarCobertura(zonasEnvio, modalidad)
+}
+
+function validarCobertura(zonasEnvio, modalidad) {
+  const error = document.getElementById("pedido-error")
+  const boton = document.querySelector("#form-pedido button[type='submit']")
+  const zona = zonasEnvio.find((z) => z.id === document.getElementById("zona").value)
+  const fueraDeCobertura = modalidad === "delivery" && zona && !zona.cubierta
+
+  if (fueraDeCobertura) {
+    error.textContent = MENSAJE_FUERA_DE_COBERTURA
+  } else if (error.textContent === MENSAJE_FUERA_DE_COBERTURA) {
+    error.textContent = ""
+  }
+
+  boton.disabled = Boolean(fueraDeCobertura)
 }
 
 function initConfirmacion() {

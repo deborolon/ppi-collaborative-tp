@@ -18,10 +18,12 @@
     { "id": "agua", "nombre": "Agua Saborizada", "categoria": "Bebidas", "precio": 2500, "stock": 30, "descripcion": "Agua saborizada sin gas, 500 ml." }
   ],
   "zonasEnvio": [
-    { "id": "zona1", "nombre": "Zona 1 (hasta 10 cuadras)", "costo": 1000 },
-    { "id": "zona2", "nombre": "Zona 2 (10 a 20 cuadras)", "costo": 1500 },
-    { "id": "zona3", "nombre": "Zona 3 (20 a 30 cuadras)", "costo": 2000 },
-    { "id": "takeaway", "nombre": "Retiro en el local (sin envío)", "costo": 0 }
+    { "id": "caba", "nombre": "Capital Federal", "costo": 1000, "cubierta": true },
+    { "id": "oeste", "nombre": "Zona Oeste", "costo": 1200, "cubierta": true },
+    { "id": "norte", "nombre": "Zona Norte", "costo": 1400, "cubierta": true },
+    { "id": "sur", "nombre": "Zona Sur", "costo": 1600, "cubierta": true },
+    { "id": "otra", "nombre": "Otra", "costo": null, "cubierta": false },
+    { "id": "takeaway", "nombre": "Retiro en el local (sin envío)", "costo": 0, "cubierta": true }
   ],
   "ingredientes": [
     { "nombre": "Panceta", "stock": 6, "minimo": 10 },
@@ -41,7 +43,7 @@
         { "productoId": "gaseosa", "nombre": "Gaseosa 500ml", "cantidad": 1, "precio": 3500 }
       ],
       "modalidad": "delivery",
-      "zonaId": "zona1",
+      "zonaId": "caba",
       "direccion": "Av. Rivadavia 4200, CABA",
       "costoEnvio": 1000,
       "subtotal": 18500,
@@ -78,11 +80,11 @@
         { "productoId": "gaseosa", "nombre": "Gaseosa 500ml", "cantidad": 1, "precio": 3500 }
       ],
       "modalidad": "delivery",
-      "zonaId": "zona2",
+      "zonaId": "caba",
       "direccion": "Bartolomé Mitre 2550, CABA",
-      "costoEnvio": 1500,
+      "costoEnvio": 1000,
       "subtotal": 19700,
-      "total": 21200,
+      "total": 20700,
       "estado": "preparacion",
       "fecha": "2026-09-22",
       "hora": "13:05",
@@ -96,7 +98,7 @@
         { "productoId": "gaseosa", "nombre": "Gaseosa 500ml", "cantidad": 2, "precio": 3500 }
       ],
       "modalidad": "delivery",
-      "zonaId": "zona1",
+      "zonaId": "caba",
       "direccion": "Av. Corrientes 3100, CABA",
       "costoEnvio": 1000,
       "subtotal": 27400,
