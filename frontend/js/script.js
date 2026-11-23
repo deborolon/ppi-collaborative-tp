@@ -866,6 +866,73 @@ async function initTablero() {
   const contenedor = document.getElementById("tablero")
   if (!contenedor) return
 
+  const formulario = document.getElementById("filtro-ventas")
+  const desde = document.getElementById("ventas-desde")
+  const hasta = document.getElementById("ventas-hasta")
+
+  async function cargarVentas() {
+    const parametros =
+      desde.value && hasta.value
+        ? "?desde=" + encodeURIComponent(desde.value) + "&hasta=" + encodeURIComponent(hasta.value)
+        : ""
+    const [ventas, ranking] = await Promise.all([
+      llamarApi("/ventas" + parametros),
+      llamarApi("/ventas/ranking" + parametros),
+    ])
+
+    if (ventas.status === 401 || ranking.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    if (!ventas.ok || !ranking.ok) {
+      const fallida = ventas.ok ? ranking : ventas
+      mostrarAviso("tablero-aviso", mensajeDeError(fallida, "No pudimos cargar las ventas."), "aviso aviso-error")
+      return
+    }
+
+    const resumen = ventas.cuerpo
+    desde.value = resumen.desde
+    hasta.value = resumen.hasta
+    mostrarAviso("tablero-aviso", resumen.mensaje || "", "aviso")
+
+    document.getElementById("kpi-facturacion").textContent = formatearPrecio(resumen.facturacion)
+    document.getElementById("kpi-pedidos").textContent = resumen.totalPedidos
+    document.getElementById("kpi-ticket").textContent = formatearPrecio(resumen.ticketPromedio)
+
+    const porEstado = document.getElementById("pedidos-por-estado")
+    porEstado.innerHTML = ""
+    resumen.porEstado.forEach(({ estado, cantidad }) => {
+      const kpi = document.createElement("article")
+      kpi.className = "kpi"
+
+      const valor = document.createElement("span")
+      valor.className = "kpi-valor"
+      valor.textContent = cantidad
+
+      const etiqueta = document.createElement("span")
+      etiqueta.className = "kpi-label"
+      etiqueta.textContent = ETIQUETA_ESTADO[estado] || estado
+
+      kpi.append(valor, etiqueta)
+      porEstado.appendChild(kpi)
+    })
+
+    const listaRanking = document.getElementById("ranking-productos")
+    listaRanking.innerHTML = ""
+    ranking.cuerpo.productos.forEach((producto, idx) => {
+      const li = document.createElement("li")
+      const posicion = document.createElement("span")
+      posicion.className = "rank-pos"
+      posicion.textContent = idx + 1
+      const unidades = document.createElement("strong")
+      unidades.textContent = producto.unidades + " u."
+      li.append(posicion, " " + producto.nombre + " ", unidades)
+      listaRanking.appendChild(li)
+    })
+    document.getElementById("ranking-mensaje").textContent = ranking.cuerpo.mensaje || ""
+  }
+
   async function cargarDemoras() {
     const respuesta = await llamarApi("/pedidos/demoras")
 
@@ -892,47 +959,38 @@ async function initTablero() {
     seccion.style.display = ""
   }
 
-  const datos = await getDatos()
-  const activos = datos.pedidos.filter((p) => p.estado !== "cancelado")
+  async function cargarIngredientes() {
+    const respuesta = await llamarApi("/ingredientes")
 
-  const facturacion = activos.reduce((s, p) => s + p.total, 0)
-  document.getElementById("kpi-facturacion").textContent = formatearPrecio(facturacion)
-  document.getElementById("kpi-pedidos").textContent = activos.length
-  const ticketProm = activos.length ? Math.round(facturacion / activos.length) : 0
-  document.getElementById("kpi-ticket").textContent = formatearPrecio(ticketProm)
+    if (respuesta.status === 401) {
+      volverAlLogin()
+      return
+    }
 
-  const ventas = {}
-  activos.forEach((p) =>
-    p.items.forEach((i) => {
-      ventas[i.nombre] = (ventas[i.nombre] || 0) + i.cantidad
-    })
-  )
-  const ranking = Object.entries(ventas).sort((a, b) => b[1] - a[1])
+    if (!respuesta.ok) return
 
-  const listaRanking = document.getElementById("ranking-productos")
-  ranking.forEach(([nombre, cantidad], idx) => {
-    const li = document.createElement("li")
-    li.innerHTML =
-      "<span class='rank-pos'>" + (idx + 1) + "</span> " +
-      nombre + " <strong>" + cantidad + " u.</strong>"
-    listaRanking.appendChild(li)
-  })
+    const listaStock = document.getElementById("ingredientes-bajos")
+    const escasos = respuesta.cuerpo.filter((i) => i.nivel !== "suficiente")
 
-  const listaStock = document.getElementById("ingredientes-bajos")
-  const bajos = datos.ingredientes.filter((i) => i.stock <= i.minimo)
-  if (bajos.length === 0) {
-    listaStock.innerHTML = "<li>Todos los ingredientes con stock suficiente ✅</li>"
-  } else {
-    bajos.forEach((i) => {
+    if (escasos.length === 0) {
+      listaStock.innerHTML = "<li>Todos los ingredientes con stock suficiente ✅</li>"
+      return
+    }
+
+    escasos.forEach((i) => {
       const li = document.createElement("li")
-      li.className = i.stock === 0 ? "critico" : ""
-      li.textContent =
-        i.nombre + " — " + i.stock + " unidades" + (i.stock === 0 ? " (agotado)" : "")
+      li.className = i.nivel === "agotado" ? "critico" : ""
+      li.textContent = i.nombre + " — " + i.stock + " unidades" + (i.nivel === "agotado" ? " (agotado)" : "")
       listaStock.appendChild(li)
     })
   }
 
-  await cargarDemoras()
+  formulario.addEventListener("submit", function (e) {
+    e.preventDefault()
+    cargarVentas()
+  })
+
+  await Promise.all([cargarVentas(), cargarDemoras(), cargarIngredientes()])
   setInterval(cargarDemoras, INTERVALO_ACTUALIZACION_MS)
 }
 
