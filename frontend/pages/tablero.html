@@ -37,11 +37,17 @@
     </section>
 
     <section class="seccion">
-      <h2>Indicadores del día</h2>
+      <h2>Ventas</h2>
+      <form class="filtro-fechas" id="filtro-ventas">
+        <label>Desde <input type="date" id="ventas-desde" required></label>
+        <label>Hasta <input type="date" id="ventas-hasta" required></label>
+        <button type="submit" class="btn">Consultar</button>
+      </form>
+      <div id="tablero-aviso" role="alert"></div>
       <div class="grilla kpis">
         <article class="kpi">
           <span class="kpi-valor" id="kpi-facturacion">$0</span>
-          <span class="kpi-label">Facturación del día</span>
+          <span class="kpi-label">Facturación</span>
         </article>
         <article class="kpi">
           <span class="kpi-valor" id="kpi-pedidos">0</span>
@@ -52,12 +58,19 @@
           <span class="kpi-label">Ticket promedio</span>
         </article>
       </div>
+      <div class="grilla kpis" id="pedidos-por-estado"></div>
+    </section>
+
+    <section class="seccion" id="seccion-demoras" style="display: none">
+      <h2>Demoras reportadas</h2>
+      <ul class="lista-stock" id="demoras"></ul>
     </section>
 
     <div class="grilla">
       <section class="seccion columna">
         <h2>Productos más vendidos</h2>
         <ol class="ranking" id="ranking-productos"></ol>
+        <p id="ranking-mensaje"></p>
       </section>
 
       <section class="seccion columna">

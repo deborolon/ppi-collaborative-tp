@@ -23,6 +23,13 @@ export async function buscarPorId(id) {
   return pedidos.find((pedido) => pedido.id === id)
 }
 
+export async function actualizar(id, cambiar) {
+  return await modificar(ARCHIVO, inicial(), (pedidos) => {
+    const pedido = pedidos.find((actual) => actual.id === id)
+    return pedido ? cambiar(pedido) : undefined
+  })
+}
+
 export async function crear(pedido) {
   return await modificar(ARCHIVO, inicial(), (pedidos) => {
     const ultimo = Math.max(0, ...pedidos.map((actual) => Number(actual.id.slice(3))))

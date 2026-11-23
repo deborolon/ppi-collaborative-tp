@@ -34,6 +34,7 @@
     <section class="seccion">
       <h1>Panel de cocina</h1>
       <div class="aviso" id="aviso-stock"></div>
+      <div id="cocina-aviso" role="alert"></div>
     </section>
 
     <section class="seccion">
@@ -41,12 +42,26 @@
       <div class="comandas" id="comandas"></div>
     </section>
 
+    <dialog id="dialogo-demora">
+      <form id="form-demora">
+        <h2 id="demora-titulo"></h2>
+        <fieldset id="demora-ingredientes">
+          <legend>Ingredientes faltantes</legend>
+        </fieldset>
+        <div id="demora-aviso" role="alert"></div>
+        <div class="acciones-dialogo">
+          <button type="submit" class="btn">Enviar aviso</button>
+          <button type="button" class="btn btn-claro" id="demora-cancelar">Cancelar</button>
+        </div>
+      </form>
+    </dialog>
+
     <section class="seccion">
       <h2>Estados de las comandas</h2>
       <ul class="lista-referencia semaforo">
         <li><span class="semaforo-luz luz-roja" aria-hidden="true"></span><span><strong>Rojo:</strong> pedido nuevo, prioridad alta.</span></li>
         <li><span class="semaforo-luz luz-amarilla" aria-hidden="true"></span><span><strong>Amarillo:</strong> en preparación.</span></li>
-        <li><span class="semaforo-luz luz-verde" aria-hidden="true"></span><span><strong>Verde:</strong> listo para retirar; despachar.</span></li>
+        <li><span class="semaforo-luz luz-verde" aria-hidden="true"></span><span><strong>Verde:</strong> listo para retirar; entregar al cliente.</span></li>
       </ul>
     </section>
   </main>

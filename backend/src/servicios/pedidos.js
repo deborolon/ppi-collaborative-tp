@@ -1,25 +1,38 @@
 import * as repositorio from "../repositorios/pedidos.js"
+import { fechaDe, horaDe } from "./fechas.js"
+import * as ingredientes from "./ingredientes.js"
 import * as productos from "./productos.js"
+import * as usuarios from "./usuarios.js"
 import * as zonasEnvio from "./zonas-envio.js"
 
 const ESPERA_MINUTOS = 15
 const MAXIMO_DIRECCION = 200
-const ZONA_HORARIA = "America/Argentina/Buenos_Aires"
-const ESTADOS = ["pendiente", "preparacion", "listo", "entregado"]
+export const ESTADOS = ["pendiente", "preparacion", "listo", "entregado"]
+const SECUENCIA = {
+  pendiente: { siguiente: "preparacion", texto: "Marchar" },
+  preparacion: { siguiente: "listo", texto: "Despachar" },
+  listo: { siguiente: "entregado", texto: "Entregar" },
+}
+const ESPERA_POR_ESTADO = { preparacion: 8, listo: 1, entregado: 0 }
 const MENSAJE_NO_DISPONIBLES = "Uno o más productos del pedido original no están disponibles actualmente."
 const MENSAJE_FUERA_DE_COBERTURA = "La dirección ingresada se encuentra fuera de la zona de cobertura"
-
-const formatoFecha = new Intl.DateTimeFormat("en-CA", { timeZone: ZONA_HORARIA })
-const formatoHora = new Intl.DateTimeFormat("en-GB", {
-  timeZone: ZONA_HORARIA,
-  hour: "2-digit",
-  minute: "2-digit",
-  hourCycle: "h23",
-})
+const MENSAJE_SIN_COMANDAS = "No hay comandas pendientes en este momento"
+const MENSAJE_ENTREGADO = "El pedido ya fue entregado y no puede modificarse"
+const MENSAJE_DEMORA_ENTREGADO = "No se pueden reportar demoras en pedidos ya entregados"
 
 const invalido = (error) => ({ estado: "invalido", error })
 
 const esRepetible = (pedido) => pedido.estado === "entregado"
+
+const accionDe = (pedido) => {
+  const paso = SECUENCIA[pedido.estado]
+  return paso ? { estado: paso.siguiente, texto: paso.texto } : null
+}
+
+const nombreDePila = (nombre) => nombre.split(" ")[0]
+
+const nombresDe = (catalogo, ids) =>
+  catalogo.filter((ingrediente) => ids.includes(ingrediente.id)).map((ingrediente) => ingrediente.nombre)
 
 const marcaTiempo = (pedido) => `${pedido.fecha} ${pedido.hora ?? "00:00"}`
 const numeroDePedido = (pedido) => Number(pedido.id.slice(3))
@@ -66,12 +79,89 @@ async function resolverEntrega(modalidad, zonaId, direccion) {
   return { zonaId: zona.id, direccion: direccionLimpia, costoEnvio: zona.costo }
 }
 
-export async function listar() {
-  return await repositorio.listar()
+export async function listarComandas() {
+  const [pedidos, clientes, catalogo] = await Promise.all([
+    repositorio.listar(),
+    usuarios.listar(),
+    ingredientes.listar(),
+  ])
+  const nombres = new Map(clientes.map((cliente) => [cliente.id, nombreDePila(cliente.nombre)]))
+
+  const comandas = pedidos
+    .filter((pedido) => pedido.estado !== "entregado")
+    .sort((a, b) => masReciente(b, a))
+    .map((pedido) => ({
+      id: pedido.id,
+      nombre: nombres.get(pedido.clienteId) ?? "Cliente",
+      items: pedido.items.map(({ nombre, cantidad }) => ({ nombre, cantidad })),
+      hora: pedido.hora ?? null,
+      estado: pedido.estado,
+      esperaMin: pedido.esperaMin,
+      demora: pedido.demora ? { ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) } : null,
+      accion: accionDe(pedido),
+    }))
+
+  return { comandas, mensaje: comandas.length === 0 ? MENSAJE_SIN_COMANDAS : null }
 }
 
-export async function obtener(id) {
-  return await repositorio.buscarPorId(id)
+export async function actualizarEstado(id, estadoNuevo) {
+  if (!ESTADOS.includes(estadoNuevo)) {
+    return invalido("El estado indicado no es válido.")
+  }
+
+  const resultado = await repositorio.actualizar(id, (pedido) => {
+    if (pedido.estado === "entregado") {
+      return { estado: "entregado", error: MENSAJE_ENTREGADO }
+    }
+
+    if (SECUENCIA[pedido.estado].siguiente !== estadoNuevo) {
+      return {
+        estado: "fuera-de-secuencia",
+        error: "El pedido solo puede avanzar al estado siguiente de la secuencia.",
+      }
+    }
+
+    pedido.estado = estadoNuevo
+    pedido.esperaMin = ESPERA_POR_ESTADO[estadoNuevo]
+
+    return { estado: "ok", pedido: { id: pedido.id, estado: pedido.estado, esperaMin: pedido.esperaMin } }
+  })
+
+  return resultado ?? { estado: "no-encontrado" }
+}
+
+export async function reportarDemora(id, faltantes) {
+  const catalogo = await ingredientes.listar()
+  const disponibles = catalogo.map((ingrediente) => ingrediente.id)
+
+  if (!Array.isArray(faltantes) || faltantes.length === 0) {
+    return invalido("Indicá al menos un ingrediente faltante.")
+  }
+
+  if (!faltantes.every((id) => disponibles.includes(id))) {
+    return invalido("Los ingredientes indicados no son válidos.")
+  }
+
+  const resultado = await repositorio.actualizar(id, (pedido) => {
+    if (pedido.estado === "entregado") {
+      return { estado: "entregado", error: MENSAJE_DEMORA_ENTREGADO }
+    }
+
+    pedido.demora = { ingredientes: disponibles.filter((id) => faltantes.includes(id)) }
+
+    return { estado: "ok", demora: { ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) } }
+  })
+
+  return resultado ?? { estado: "no-encontrado" }
+}
+
+export async function listarDemoras() {
+  const [pedidos, catalogo] = await Promise.all([repositorio.listar(), ingredientes.listar()])
+
+  return pedidos
+    .filter((pedido) => pedido.demora && pedido.estado !== "entregado")
+    .sort((a, b) => masReciente(b, a))
+    .map((pedido) => ({ id: pedido.id, ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) }))
 }
 
 export async function listarDeCliente(usuario, estado) {
@@ -205,8 +295,8 @@ export async function crear(usuario, solicitud) {
       subtotal,
       total: subtotal + entrega.costoEnvio,
       estado: "pendiente",
-      fecha: formatoFecha.format(ahora),
-      hora: formatoHora.format(ahora),
+      fecha: fechaDe(ahora),
+      hora: horaDe(ahora),
       esperaMin: ESPERA_MINUTOS,
     })
 

@@ -26,12 +26,12 @@
     { "id": "takeaway", "nombre": "Retiro en el local (sin envío)", "costo": 0, "cubierta": true }
   ],
   "ingredientes": [
-    { "nombre": "Panceta", "stock": 6, "minimo": 10 },
-    { "nombre": "Pan brioche", "stock": 40, "minimo": 15 },
-    { "nombre": "Medallón de carne", "stock": 30, "minimo": 15 },
-    { "nombre": "Cheddar", "stock": 18, "minimo": 10 },
-    { "nombre": "Medallón veggie", "stock": 0, "minimo": 8 },
-    { "nombre": "Cebolla", "stock": 22, "minimo": 8 }
+    { "id": "panceta", "nombre": "Panceta", "stock": 6, "minimo": 10 },
+    { "id": "pan_brioche", "nombre": "Pan brioche", "stock": 40, "minimo": 15 },
+    { "id": "medallon_carne", "nombre": "Medallón de carne", "stock": 30, "minimo": 15 },
+    { "id": "cheddar", "nombre": "Cheddar", "stock": 18, "minimo": 10 },
+    { "id": "medallon_veggie", "nombre": "Medallón veggie", "stock": 0, "minimo": 8 },
+    { "id": "cebolla", "nombre": "Cebolla", "stock": 22, "minimo": 8 }
   ],
   "pedidos": [
     {

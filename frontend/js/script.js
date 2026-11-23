@@ -5,13 +5,14 @@ function rutaBase() {
 const LS = {
   usuario: "bc_usuario",
   token: "bc_token",
-  pedidos: "bc_pedidos",
-  productos: "bc_productos",
-  ingredientes: "bc_ingredientes",
   ultimoPedido: "bc_ultimo_pedido",
 }
 
 const COLOR_ESTADO = { pendiente: "rojo", preparacion: "amarillo", listo: "verde" }
+
+const CLASE_BOTON_ESTADO = { preparacion: "btn-marchar", listo: "btn-despachar", entregado: "btn-despachar" }
+
+const INTERVALO_ACTUALIZACION_MS = 5000
 
 const ETIQUETA_ESTADO = {
   pendiente: "En espera",
@@ -20,48 +21,8 @@ const ETIQUETA_ESTADO = {
   entregado: "Entregado",
 }
 
-async function cargarDatosIniciales() {
-  const respuesta = await fetch("/api/datos")
-  return await respuesta.json()
-}
-
-async function getDatos() {
-  const base = await cargarDatosIniciales()
-
-  if (!localStorage.getItem(LS.pedidos)) {
-    localStorage.setItem(LS.pedidos, JSON.stringify(base.pedidos))
-  }
-  if (!localStorage.getItem(LS.productos)) {
-    localStorage.setItem(LS.productos, JSON.stringify(base.productos))
-  }
-  if (!localStorage.getItem(LS.ingredientes)) {
-    localStorage.setItem(LS.ingredientes, JSON.stringify(base.ingredientes))
-  }
-
-  return {
-    usuarios: base.usuarios,
-    zonasEnvio: base.zonasEnvio,
-    productos: JSON.parse(localStorage.getItem(LS.productos)),
-    ingredientes: JSON.parse(localStorage.getItem(LS.ingredientes)),
-    pedidos: JSON.parse(localStorage.getItem(LS.pedidos)),
-  }
-}
-
 function formatearPrecio(valor) {
   return "$" + valor.toLocaleString("es-AR")
-}
-
-function guardarPedidos(pedidos) {
-  localStorage.setItem(LS.pedidos, JSON.stringify(pedidos))
-}
-
-async function registrarPedidoLocal(pedido) {
-  const datos = await getDatos()
-
-  if (!datos.pedidos.some((actual) => actual.id === pedido.id)) {
-    datos.pedidos.push(pedido)
-    guardarPedidos(datos.pedidos)
-  }
 }
 
 async function llamarApi(ruta, opciones = {}) {
@@ -385,7 +346,6 @@ async function initPedido() {
     }
 
     if (respuesta && respuesta.ok) {
-      await registrarPedidoLocal(respuesta.cuerpo)
       localStorage.setItem(LS.ultimoPedido, JSON.stringify(respuesta.cuerpo))
       window.location.href = rutaBase() + "pages/confirmacion.html"
       return
@@ -403,10 +363,10 @@ async function initPedido() {
   })
 }
 
-function mostrarAvisoPedido(texto, clase) {
-  const aviso = document.getElementById("pedido-aviso")
+function mostrarAviso(id, texto, clase) {
+  const aviso = document.getElementById(id)
   aviso.textContent = texto
-  aviso.className = clase
+  aviso.className = texto ? clase : ""
 }
 
 async function precargarRepeticion(pedidoId) {
@@ -418,7 +378,8 @@ async function precargarRepeticion(pedidoId) {
   }
 
   if (!respuesta.ok) {
-    mostrarAvisoPedido(
+    mostrarAviso(
+      "pedido-aviso",
       (respuesta.cuerpo && respuesta.cuerpo.error) || "No pudimos cargar el pedido anterior.",
       "aviso aviso-error"
     )
@@ -433,7 +394,7 @@ async function precargarRepeticion(pedidoId) {
     if (input) input.value = item.cantidad
   })
 
-  if (mensaje) mostrarAvisoPedido(mensaje, "aviso")
+  if (mensaje) mostrarAviso("pedido-aviso", mensaje, "aviso")
 }
 
 function crearItemPedido(producto) {
@@ -567,7 +528,7 @@ async function initMisPedidos() {
   async function cargarHistorial() {
     const consulta = ++consultaActual
     const parametros = filtro.value ? "?estado=" + encodeURIComponent(filtro.value) : ""
-    const respuesta = await llamarApi("/pedidos/mios" + parametros)
+    const respuesta = await llamarApi("/pedidos/propios" + parametros)
 
     if (consulta !== consultaActual) return
 
@@ -644,119 +605,21 @@ function crearTarjetaPedido(pedido) {
   return card
 }
 
-async function initCocina() {
-  const contenedor = document.getElementById("comandas")
-  if (!contenedor) return
-
-  await renderComandas()
-  await renderAvisoStock()
-
-  contenedor.addEventListener("click", async function (e) {
-    const boton = e.target.closest("[data-accion]")
-    if (!boton) return
-    cambiarEstadoPedido(boton.dataset.pedido, boton.dataset.accion)
-    await renderComandas()
-  })
+function mensajeDeError(respuesta, porDefecto) {
+  return (respuesta.cuerpo && respuesta.cuerpo.error) || porDefecto
 }
 
-async function renderComandas() {
-  const contenedor = document.getElementById("comandas")
-  contenedor.innerHTML = ""
-  const datos = await getDatos()
-
-  const activas = datos.pedidos.filter((p) => p.estado !== "entregado")
-
-  if (activas.length === 0) {
-    contenedor.innerHTML = "<p>No hay comandas activas en este momento.</p>"
-    return
-  }
-
-  activas.forEach((pedido) => {
-    const cliente = datos.usuarios.find((u) => u.id === pedido.clienteId)
-
-    const nombrePila = cliente ? cliente.nombre : "Cliente"
-
-    const art = document.createElement("article")
-    art.className = "comanda " + (COLOR_ESTADO[pedido.estado] || "")
-
-    const h3 = document.createElement("h3")
-    h3.textContent = "#" + pedido.id + " · " + nombrePila
-    art.appendChild(h3)
-
-    const pEstado = document.createElement("p")
-    const badge = document.createElement("span")
-    badge.className = "estado estado-" + pedido.estado
-    badge.textContent =
-      pedido.estado === "pendiente" ? "Prioridad alta" : ETIQUETA_ESTADO[pedido.estado]
-    pEstado.appendChild(badge)
-    art.appendChild(pEstado)
-
-    const ul = document.createElement("ul")
-    pedido.items.forEach((i) => {
-      const li = document.createElement("li")
-      li.textContent = i.cantidad + "× " + i.nombre
-      ul.appendChild(li)
-    })
-    art.appendChild(ul)
-
-    const espera = document.createElement("p")
-    espera.innerHTML = "<strong>Espera:</strong> " + pedido.esperaMin + " min"
-    art.appendChild(espera)
-
-    if (pedido.estado === "pendiente") {
-      art.appendChild(botonCocina(pedido.id, "marchar", "Comenzar preparación", "btn-marchar"))
-    }
-    if (pedido.estado === "preparacion") {
-      art.appendChild(botonCocina(pedido.id, "despachar", "Marcar listo", "btn-despachar"))
-    }
-    if (pedido.estado === "listo") {
-      art.appendChild(botonCocina(pedido.id, "entregar", "Despachar", "btn-despachar"))
-    }
-
-    contenedor.appendChild(art)
-  })
-}
-
-function botonCocina(pedidoId, accion, texto, clase) {
-  const btn = document.createElement("button")
-  btn.type = "button"
-  btn.className = "btn btn-cocina " + clase
-  btn.setAttribute("data-pedido", pedidoId)
-  btn.setAttribute("data-accion", accion)
-  btn.textContent = texto
-  return btn
-}
-
-function cambiarEstadoPedido(pedidoId, accion) {
-  const pedidos = JSON.parse(localStorage.getItem(LS.pedidos))
-  const pedido = pedidos.find((p) => p.id === pedidoId)
-  if (!pedido) return
-
-  const transiciones = {
-    marchar: "preparacion",
-    despachar: "listo",
-    entregar: "entregado",
-  }
-  pedido.estado = transiciones[accion] || pedido.estado
-  if (pedido.estado === "preparacion") pedido.esperaMin = 8
-  if (pedido.estado === "listo") pedido.esperaMin = 1
-  if (pedido.estado === "entregado") pedido.esperaMin = 0
-
-  guardarPedidos(pedidos)
-}
-
-async function renderAvisoStock() {
+function renderAvisoStock(ingredientes) {
   const contenedor = document.getElementById("aviso-stock")
-  if (!contenedor) return
-  const datos = await getDatos()
-  const bajos = datos.ingredientes.filter((i) => i.stock <= i.minimo)
+  const escasos = ingredientes.filter((i) => i.nivel !== "suficiente")
 
-  if (bajos.length === 0) {
+  if (escasos.length === 0) {
     contenedor.style.display = "none"
     return
   }
-  const nombres = bajos
-    .map((i) => i.nombre + (i.stock === 0 ? " (agotado)" : " (" + i.stock + ")"))
+
+  const nombres = escasos
+    .map((i) => i.nombre + (i.nivel === "agotado" ? " (agotado)" : " (" + i.stock + ")"))
     .join(", ")
   contenedor.innerHTML =
     "🟡 <strong>Aviso de stock:</strong> quedan pocas unidades de " +
@@ -764,49 +627,327 @@ async function renderAvisoStock() {
     ". Avisar demoras si es necesario."
 }
 
+function crearComanda(comanda) {
+  const articulo = document.createElement("article")
+  articulo.className = "comanda " + (COLOR_ESTADO[comanda.estado] || "")
+
+  const titulo = document.createElement("h3")
+  titulo.textContent = "#" + comanda.id + " · " + comanda.nombre
+  articulo.appendChild(titulo)
+
+  const estado = document.createElement("p")
+  const insignia = document.createElement("span")
+  insignia.className = "estado estado-" + comanda.estado
+  insignia.textContent = ETIQUETA_ESTADO[comanda.estado] || comanda.estado
+  estado.appendChild(insignia)
+  articulo.appendChild(estado)
+
+  const ingreso = document.createElement("p")
+  ingreso.innerHTML = "<strong>Ingreso:</strong> " + comanda.hora
+  articulo.appendChild(ingreso)
+
+  const lista = document.createElement("ul")
+  comanda.items.forEach((item) => {
+    const li = document.createElement("li")
+    li.textContent = item.cantidad + "× " + item.nombre
+    lista.appendChild(li)
+  })
+  articulo.appendChild(lista)
+
+  const espera = document.createElement("p")
+  espera.innerHTML = "<strong>Espera:</strong> " + comanda.esperaMin + " min"
+  articulo.appendChild(espera)
+
+  if (comanda.demora) {
+    const demora = document.createElement("p")
+    demora.className = "aviso aviso-error"
+    demora.textContent = "Demora por falta de: " + comanda.demora.ingredientes.join(", ")
+    articulo.appendChild(demora)
+  }
+
+  if (comanda.accion) {
+    articulo.appendChild(
+      botonCocina(comanda.id, comanda.accion.estado, comanda.accion.texto, CLASE_BOTON_ESTADO[comanda.accion.estado])
+    )
+  }
+
+  const reportar = document.createElement("button")
+  reportar.type = "button"
+  reportar.className = "btn btn-claro btn-cocina"
+  reportar.dataset.demora = comanda.id
+  reportar.textContent = "Reportar demora"
+  articulo.appendChild(reportar)
+
+  return articulo
+}
+
+function botonCocina(pedidoId, estado, texto, clase) {
+  const boton = document.createElement("button")
+  boton.type = "button"
+  boton.className = "btn btn-cocina " + clase
+  boton.dataset.pedido = pedidoId
+  boton.dataset.estado = estado
+  boton.textContent = texto
+  return boton
+}
+
+async function initCocina() {
+  const contenedor = document.getElementById("comandas")
+  if (!contenedor) return
+
+  const dialogo = document.getElementById("dialogo-demora")
+  const formulario = document.getElementById("form-demora")
+  let pedidoConDemora = null
+  let consultaActual = 0
+  let vistaActual = ""
+
+  async function cargarComandas() {
+    const consulta = ++consultaActual
+    const respuesta = await llamarApi("/pedidos/comandas")
+
+    if (consulta !== consultaActual) return
+
+    if (respuesta.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    if (!respuesta.ok) {
+      vistaActual = ""
+      contenedor.innerHTML = "<p>No pudimos cargar las comandas. Intentá de nuevo en unos minutos.</p>"
+      return
+    }
+
+    const vista = JSON.stringify(respuesta.cuerpo)
+    if (vista === vistaActual) return
+    vistaActual = vista
+
+    contenedor.innerHTML = ""
+
+    if (respuesta.cuerpo.mensaje) {
+      const mensaje = document.createElement("p")
+      mensaje.textContent = respuesta.cuerpo.mensaje
+      contenedor.appendChild(mensaje)
+      return
+    }
+
+    respuesta.cuerpo.comandas.forEach((comanda) => contenedor.appendChild(crearComanda(comanda)))
+  }
+
+  const ingredientes = await llamarApi("/ingredientes")
+
+  if (ingredientes.status === 401) {
+    volverAlLogin()
+    return
+  }
+
+  if (ingredientes.ok) {
+    renderAvisoStock(ingredientes.cuerpo)
+
+    const opciones = document.getElementById("demora-ingredientes")
+    ingredientes.cuerpo.forEach((ingrediente) => {
+      const etiqueta = document.createElement("label")
+      const casilla = document.createElement("input")
+      casilla.type = "checkbox"
+      casilla.value = ingrediente.id
+      etiqueta.appendChild(casilla)
+      etiqueta.append(" " + ingrediente.nombre)
+      opciones.appendChild(etiqueta)
+    })
+  }
+
+  contenedor.addEventListener("click", async function (e) {
+    const avance = e.target.closest("button[data-estado]")
+    const demora = e.target.closest("button[data-demora]")
+
+    if (avance) {
+      avance.disabled = true
+      const respuesta = await llamarApi(
+        "/pedidos/" + encodeURIComponent(avance.dataset.pedido) + "/estado",
+        { method: "PATCH", body: JSON.stringify({ estado: avance.dataset.estado }) }
+      )
+
+      if (respuesta.status === 401) {
+        volverAlLogin()
+        return
+      }
+
+      mostrarAviso(
+        "cocina-aviso",
+        respuesta.ok ? "" : mensajeDeError(respuesta, "No pudimos actualizar el pedido."),
+        "aviso aviso-error"
+      )
+      await cargarComandas()
+    }
+
+    if (demora) {
+      pedidoConDemora = demora.dataset.demora
+      document.getElementById("demora-titulo").textContent = "Demora en el pedido #" + pedidoConDemora
+      formulario.reset()
+      mostrarAviso("demora-aviso", "", "")
+      dialogo.showModal()
+    }
+  })
+
+  formulario.addEventListener("submit", async function (e) {
+    e.preventDefault()
+
+    const faltantes = [...formulario.querySelectorAll("input:checked")].map((casilla) => casilla.value)
+    const respuesta = await llamarApi(
+      "/pedidos/" + encodeURIComponent(pedidoConDemora) + "/demora",
+      { method: "POST", body: JSON.stringify({ ingredientes: faltantes }) }
+    )
+
+    if (respuesta.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    if (!respuesta.ok) {
+      mostrarAviso("demora-aviso", mensajeDeError(respuesta, "No pudimos enviar el aviso."), "aviso aviso-error")
+      return
+    }
+
+    dialogo.close()
+    await cargarComandas()
+  })
+
+  document.getElementById("demora-cancelar").addEventListener("click", () => dialogo.close())
+
+  await cargarComandas()
+  setInterval(cargarComandas, INTERVALO_ACTUALIZACION_MS)
+}
+
 async function initTablero() {
   const contenedor = document.getElementById("tablero")
   if (!contenedor) return
 
-  const datos = await getDatos()
-  const activos = datos.pedidos.filter((p) => p.estado !== "cancelado")
+  const formulario = document.getElementById("filtro-ventas")
+  const desde = document.getElementById("ventas-desde")
+  const hasta = document.getElementById("ventas-hasta")
 
-  const facturacion = activos.reduce((s, p) => s + p.total, 0)
-  document.getElementById("kpi-facturacion").textContent = formatearPrecio(facturacion)
-  document.getElementById("kpi-pedidos").textContent = activos.length
-  const ticketProm = activos.length ? Math.round(facturacion / activos.length) : 0
-  document.getElementById("kpi-ticket").textContent = formatearPrecio(ticketProm)
+  async function cargarVentas() {
+    const parametros =
+      desde.value && hasta.value
+        ? "?desde=" + encodeURIComponent(desde.value) + "&hasta=" + encodeURIComponent(hasta.value)
+        : ""
+    const [ventas, ranking] = await Promise.all([
+      llamarApi("/ventas" + parametros),
+      llamarApi("/ventas/ranking" + parametros),
+    ])
 
-  const ventas = {}
-  activos.forEach((p) =>
-    p.items.forEach((i) => {
-      ventas[i.nombre] = (ventas[i.nombre] || 0) + i.cantidad
+    if (ventas.status === 401 || ranking.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    if (!ventas.ok || !ranking.ok) {
+      const fallida = ventas.ok ? ranking : ventas
+      mostrarAviso("tablero-aviso", mensajeDeError(fallida, "No pudimos cargar las ventas."), "aviso aviso-error")
+      return
+    }
+
+    const resumen = ventas.cuerpo
+    desde.value = resumen.desde
+    hasta.value = resumen.hasta
+    mostrarAviso("tablero-aviso", resumen.mensaje || "", "aviso")
+
+    document.getElementById("kpi-facturacion").textContent = formatearPrecio(resumen.facturacion)
+    document.getElementById("kpi-pedidos").textContent = resumen.totalPedidos
+    document.getElementById("kpi-ticket").textContent = formatearPrecio(resumen.ticketPromedio)
+
+    const porEstado = document.getElementById("pedidos-por-estado")
+    porEstado.innerHTML = ""
+    resumen.porEstado.forEach(({ estado, cantidad }) => {
+      const kpi = document.createElement("article")
+      kpi.className = "kpi"
+
+      const valor = document.createElement("span")
+      valor.className = "kpi-valor"
+      valor.textContent = cantidad
+
+      const etiqueta = document.createElement("span")
+      etiqueta.className = "kpi-label"
+      etiqueta.textContent = ETIQUETA_ESTADO[estado] || estado
+
+      kpi.append(valor, etiqueta)
+      porEstado.appendChild(kpi)
     })
-  )
-  const ranking = Object.entries(ventas).sort((a, b) => b[1] - a[1])
 
-  const listaRanking = document.getElementById("ranking-productos")
-  ranking.forEach(([nombre, cantidad], idx) => {
-    const li = document.createElement("li")
-    li.innerHTML =
-      "<span class='rank-pos'>" + (idx + 1) + "</span> " +
-      nombre + " <strong>" + cantidad + " u.</strong>"
-    listaRanking.appendChild(li)
-  })
-
-  const listaStock = document.getElementById("ingredientes-bajos")
-  const bajos = datos.ingredientes.filter((i) => i.stock <= i.minimo)
-  if (bajos.length === 0) {
-    listaStock.innerHTML = "<li>Todos los ingredientes con stock suficiente ✅</li>"
-  } else {
-    bajos.forEach((i) => {
+    const listaRanking = document.getElementById("ranking-productos")
+    listaRanking.innerHTML = ""
+    ranking.cuerpo.productos.forEach((producto, idx) => {
       const li = document.createElement("li")
-      li.className = i.stock === 0 ? "critico" : ""
-      li.textContent =
-        i.nombre + " — " + i.stock + " unidades" + (i.stock === 0 ? " (agotado)" : "")
+      const posicion = document.createElement("span")
+      posicion.className = "rank-pos"
+      posicion.textContent = idx + 1
+      const unidades = document.createElement("strong")
+      unidades.textContent = producto.unidades + " u."
+      li.append(posicion, " " + producto.nombre + " ", unidades)
+      listaRanking.appendChild(li)
+    })
+    document.getElementById("ranking-mensaje").textContent = ranking.cuerpo.mensaje || ""
+  }
+
+  async function cargarDemoras() {
+    const respuesta = await llamarApi("/pedidos/demoras")
+
+    if (respuesta.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    const seccion = document.getElementById("seccion-demoras")
+    const lista = document.getElementById("demoras")
+    lista.innerHTML = ""
+
+    if (!respuesta.ok || respuesta.cuerpo.length === 0) {
+      seccion.style.display = "none"
+      return
+    }
+
+    respuesta.cuerpo.forEach((demora) => {
+      const li = document.createElement("li")
+      li.className = "critico"
+      li.textContent = "Pedido " + demora.id + " — falta: " + demora.ingredientes.join(", ")
+      lista.appendChild(li)
+    })
+    seccion.style.display = ""
+  }
+
+  async function cargarIngredientes() {
+    const respuesta = await llamarApi("/ingredientes")
+
+    if (respuesta.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    if (!respuesta.ok) return
+
+    const listaStock = document.getElementById("ingredientes-bajos")
+    const escasos = respuesta.cuerpo.filter((i) => i.nivel !== "suficiente")
+
+    if (escasos.length === 0) {
+      listaStock.innerHTML = "<li>Todos los ingredientes con stock suficiente ✅</li>"
+      return
+    }
+
+    escasos.forEach((i) => {
+      const li = document.createElement("li")
+      li.className = i.nivel === "agotado" ? "critico" : ""
+      li.textContent = i.nombre + " — " + i.stock + " unidades" + (i.nivel === "agotado" ? " (agotado)" : "")
       listaStock.appendChild(li)
     })
   }
+
+  formulario.addEventListener("submit", function (e) {
+    e.preventDefault()
+    cargarVentas()
+  })
+
+  await Promise.all([cargarVentas(), cargarDemoras(), cargarIngredientes()])
+  setInterval(cargarDemoras, INTERVALO_ACTUALIZACION_MS)
 }
 
 async function iniciar() {

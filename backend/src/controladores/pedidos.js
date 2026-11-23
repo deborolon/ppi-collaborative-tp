@@ -1,17 +1,47 @@
 import * as servicio from "../servicios/pedidos.js"
 
-export async function listar(req, res) {
-  res.status(200).json(await servicio.listar())
+export async function listarComandas(req, res) {
+  res.status(200).json(await servicio.listarComandas())
 }
 
-export async function obtener(req, res) {
-  const pedido = await servicio.obtener(req.params.id)
+export async function listarDemoras(req, res) {
+  res.status(200).json(await servicio.listarDemoras())
+}
 
-  if (!pedido) {
+export async function actualizarEstado(req, res) {
+  const resultado = await servicio.actualizarEstado(req.params.id, req.body?.estado)
+
+  if (resultado.estado === "invalido") {
+    return res.status(400).json({ error: resultado.error })
+  }
+
+  if (resultado.estado === "no-encontrado") {
     return res.status(404).json({ error: "Pedido no encontrado." })
   }
 
-  res.status(200).json(pedido)
+  if (resultado.estado !== "ok") {
+    return res.status(409).json({ error: resultado.error })
+  }
+
+  res.status(200).json(resultado.pedido)
+}
+
+export async function reportarDemora(req, res) {
+  const resultado = await servicio.reportarDemora(req.params.id, req.body?.ingredientes)
+
+  if (resultado.estado === "invalido") {
+    return res.status(400).json({ error: resultado.error })
+  }
+
+  if (resultado.estado === "no-encontrado") {
+    return res.status(404).json({ error: "Pedido no encontrado." })
+  }
+
+  if (resultado.estado !== "ok") {
+    return res.status(409).json({ error: resultado.error })
+  }
+
+  res.status(200).json(resultado.demora)
 }
 
 export async function listarPropios(req, res) {

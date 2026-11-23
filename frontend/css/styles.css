@@ -403,6 +403,46 @@ p {
 .btn-cocina.btn-marchar:hover { background: #c38d2c; color: var(--oscuro); }
 .btn-cocina.btn-despachar:hover { background: #365f43; color: var(--blanco); }
 
+.comanda .aviso { margin: 0.6rem 0 0; }
+
+#dialogo-demora {
+  margin: auto;
+  width: min(92%, 440px);
+  padding: 1.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  color: var(--oscuro);
+}
+
+#dialogo-demora::backdrop { background: rgba(37, 35, 31, 0.55); }
+
+#demora-ingredientes {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.8rem 0 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+}
+
+#demora-ingredientes label { font-size: 1.05rem; cursor: pointer; }
+
+.acciones-dialogo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.filtro-fechas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+#pedidos-por-estado { margin-top: 1.2rem; }
+
 .site-footer {
   background: var(--oscuro);
   color: #e2ded6;
