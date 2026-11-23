@@ -4,6 +4,7 @@ function rutaBase() {
 
 const LS = {
   usuario: "bc_usuario",
+  token: "bc_token",
   pedidos: "bc_pedidos",
   productos: "bc_productos",
   ingredientes: "bc_ingredientes",
@@ -73,9 +74,50 @@ function setUsuarioConectado(usuario) {
   localStorage.setItem(LS.usuario, JSON.stringify(usuario))
 }
 
-function cerrarSesion() {
+function limpiarSesionLocal() {
   localStorage.removeItem(LS.usuario)
-  window.location.href = rutaBase() + "index.html"
+  localStorage.removeItem(LS.token)
+}
+
+async function cerrarSesion() {
+  const token = localStorage.getItem(LS.token)
+  limpiarSesionLocal()
+
+  if (token) {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token },
+      })
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  window.location.replace(rutaBase() + "index.html")
+}
+
+async function validarSesion() {
+  const token = localStorage.getItem(LS.token)
+
+  if (!token) {
+    localStorage.removeItem(LS.usuario)
+    return
+  }
+
+  try {
+    const respuesta = await fetch("/api/auth/sesion", {
+      headers: { Authorization: "Bearer " + token },
+    })
+
+    if (respuesta.ok) {
+      setUsuarioConectado(await respuesta.json())
+    } else if (respuesta.status === 401) {
+      limpiarSesionLocal()
+    }
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 function renderizarNav() {
@@ -196,37 +238,43 @@ async function initLogin() {
   const form = document.getElementById("form-login")
   if (!form) return
 
-  const datos = await getDatos()
   const mensaje = document.getElementById("login-mensaje")
 
-  form.addEventListener("submit", function (e) {
+  form.addEventListener("submit", async function (e) {
     e.preventDefault()
     const email = document.getElementById("usuario").value.trim().toLowerCase()
     const password = document.getElementById("contrasena").value
 
-    const usuario = datos.usuarios.find(
-      (u) => u.email.toLowerCase() === email && u.password === password
-    )
-
-    if (!usuario) {
-      mensaje.textContent = "Usuario o contraseña incorrectos. Volvé a intentar."
+    let respuesta
+    try {
+      respuesta = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+    } catch (error) {
+      mensaje.textContent = "No se pudo conectar con el servidor. Volvé a intentar."
       mensaje.className = "aviso aviso-error"
       return
     }
 
-    setUsuarioConectado({
-      id: usuario.id,
-      nombre: usuario.nombre,
-      apellido: usuario.apellido,
-      rol: usuario.rol,
-    })
+    const resultado = await respuesta.json()
+
+    if (!respuesta.ok) {
+      mensaje.textContent = resultado.error
+      mensaje.className = "aviso aviso-error"
+      return
+    }
+
+    localStorage.setItem(LS.token, resultado.token)
+    setUsuarioConectado(resultado.usuario)
 
     const destinos = {
       cliente: "pedido.html",
       cocina: "cocina.html",
       dueno: "tablero.html",
     }
-    window.location.href = rutaBase() + "pages/" + destinos[usuario.rol]
+    window.location.href = rutaBase() + "pages/" + destinos[resultado.usuario.rol]
   })
 }
 
@@ -685,7 +733,11 @@ async function initTablero() {
   }
 }
 
-if (protegerPagina()) {
+async function iniciar() {
+  await validarSesion()
+
+  if (!protegerPagina()) return
+
   renderizarNav()
 
   const pagina = document.body.dataset.page
@@ -703,3 +755,11 @@ if (protegerPagina()) {
     rutas[pagina]()
   }
 }
+
+window.addEventListener("pageshow", function (e) {
+  if (e.persisted) {
+    window.location.reload()
+  }
+})
+
+iniciar()
