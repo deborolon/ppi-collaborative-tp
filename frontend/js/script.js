@@ -11,19 +11,7 @@ const LS = {
   ultimoPedido: "bc_ultimo_pedido",
 }
 
-const MENSAJE_FUERA_DE_COBERTURA = "La dirección ingresada se encuentra fuera de la zona de cobertura"
 const COLOR_ESTADO = { pendiente: "rojo", preparacion: "amarillo", listo: "verde" }
-
-const IMAGENES_PRODUCTO = {
-  clasica: "sandwich.svg",
-  bacon: "sandwich.svg",
-  veggie: "sandwich.svg",
-  papas: "french-fries.svg",
-  papas_cheddar: "cheese.svg",
-  aros: "onion-rings.svg",
-  gaseosa: "soda.svg",
-  agua: "water.svg",
-}
 
 const ETIQUETA_ESTADO = {
   pendiente: "En espera",
@@ -227,11 +215,10 @@ function crearTarjetaProducto(producto) {
   const card = document.createElement("article")
   card.className = "card producto-card" + (agotado ? " producto-agotado" : "")
 
-  const archivoImagen = IMAGENES_PRODUCTO[producto.id]
-  if (archivoImagen) {
+  if (producto.imagen) {
     const imagen = document.createElement("img")
     imagen.className = "producto-imagen"
-    imagen.src = rutaBase() + "assets/" + archivoImagen
+    imagen.src = rutaBase() + "assets/" + producto.imagen
     imagen.alt = ""
     imagen.loading = "lazy"
     imagen.width = 180
@@ -356,7 +343,7 @@ async function initPedido() {
     .forEach((z) => {
       const opt = document.createElement("option")
       opt.value = z.id
-      opt.textContent = z.cubierta ? z.nombre + " — " + formatearPrecio(z.costo) : z.nombre
+      opt.textContent = z.costo === null ? z.nombre : z.nombre + " — " + formatearPrecio(z.costo)
       selectZona.appendChild(opt)
     })
 
@@ -377,22 +364,9 @@ async function initPedido() {
     const error = document.getElementById("pedido-error")
     const boton = this.querySelector("button[type='submit']")
     const items = leerItemsSeleccionados()
+    const modalidad = document.querySelector("[name='modalidad']:checked").value
 
     error.textContent = ""
-
-    if (items.length === 0) {
-      error.textContent = "Elegí al menos un producto para confirmar la compra."
-      return
-    }
-
-    const modalidad = document.querySelector("[name='modalidad']:checked").value
-    const direccion = document.getElementById("direccion").value.trim()
-
-    if (modalidad === "delivery" && direccion === "") {
-      error.textContent = "Ingresá la dirección de entrega para confirmar el pedido."
-      return
-    }
-
     boton.disabled = true
 
     let respuesta
@@ -400,10 +374,10 @@ async function initPedido() {
       respuesta = await llamarApi("/pedidos", {
         method: "POST",
         body: JSON.stringify({
-          items: items.map(({ productoId, cantidad, precio }) => ({ productoId, cantidad, precio })),
+          items,
           modalidad,
           zonaId: modalidad === "delivery" ? selectZona.value : "takeaway",
-          direccion,
+          direccion: document.getElementById("direccion").value,
         }),
       })
     } catch (excepcion) {
@@ -433,7 +407,6 @@ function mostrarAvisoPedido(texto, clase) {
   const aviso = document.getElementById("pedido-aviso")
   aviso.textContent = texto
   aviso.className = clase
-  aviso.setAttribute("role", "alert")
 }
 
 async function precargarRepeticion(pedidoId) {
@@ -452,20 +425,15 @@ async function precargarRepeticion(pedidoId) {
     return
   }
 
-  const { items, noDisponibles, mensaje } = respuesta.cuerpo
+  const { items, mensaje } = respuesta.cuerpo
   const inputs = document.querySelectorAll("#pedido-productos input[type='number']")
 
   items.forEach((item) => {
     const input = [...inputs].find((actual) => actual.dataset.productoId === item.productoId)
-    if (input && !input.disabled) input.value = item.cantidad
+    if (input) input.value = item.cantidad
   })
 
-  if (noDisponibles.length > 0) {
-    mostrarAvisoPedido(
-      mensaje + " Sin stock: " + noDisponibles.map((p) => p.nombre).join(", ") + ".",
-      "aviso"
-    )
-  }
+  if (mensaje) mostrarAvisoPedido(mensaje, "aviso")
 }
 
 function crearItemPedido(producto) {
@@ -495,7 +463,6 @@ function crearItemPedido(producto) {
   input.min = "0"
   input.value = "0"
   input.dataset.precio = producto.precio
-  input.dataset.nombre = producto.nombre
   input.dataset.productoId = producto.id
   if (agotado) input.disabled = true
 
@@ -512,7 +479,6 @@ function leerItemsSeleccionados() {
     if (cantidad > 0) {
       items.push({
         productoId: input.dataset.productoId,
-        nombre: input.dataset.nombre,
         cantidad: cantidad,
         precio: parseInt(input.dataset.precio, 10),
       })
@@ -532,7 +498,7 @@ function actualizarResumen(zonasEnvio) {
   let costoEnvio = 0
   if (modalidad === "delivery") {
     const zona = zonasEnvio.find((z) => z.id === selectZona.value)
-    costoEnvio = zona && zona.cubierta ? zona.costo : 0
+    costoEnvio = (zona && zona.costo) || 0
     selectZona.disabled = false
     if (campoDireccion) campoDireccion.style.display = ""
   } else {
@@ -543,23 +509,6 @@ function actualizarResumen(zonasEnvio) {
   document.getElementById("resumen-subtotal").textContent = formatearPrecio(subtotal)
   document.getElementById("resumen-envio").textContent = formatearPrecio(costoEnvio)
   document.getElementById("resumen-total").textContent = formatearPrecio(subtotal + costoEnvio)
-
-  validarCobertura(zonasEnvio, modalidad)
-}
-
-function validarCobertura(zonasEnvio, modalidad) {
-  const error = document.getElementById("pedido-error")
-  const boton = document.querySelector("#form-pedido button[type='submit']")
-  const zona = zonasEnvio.find((z) => z.id === document.getElementById("zona").value)
-  const fueraDeCobertura = modalidad === "delivery" && zona && !zona.cubierta
-
-  if (fueraDeCobertura) {
-    error.textContent = MENSAJE_FUERA_DE_COBERTURA
-  } else if (error.textContent === MENSAJE_FUERA_DE_COBERTURA) {
-    error.textContent = ""
-  }
-
-  boton.disabled = Boolean(fueraDeCobertura)
 }
 
 function initConfirmacion() {
@@ -683,7 +632,7 @@ function crearTarjetaPedido(pedido) {
   total.innerHTML = "<strong>Total:</strong> " + formatearPrecio(pedido.total)
   body.appendChild(total)
 
-  if (pedido.estado === "entregado") {
+  if (pedido.repetible) {
     const repetir = document.createElement("a")
     repetir.className = "btn"
     repetir.href = "pedido.html?repetir=" + encodeURIComponent(pedido.id)

@@ -19,6 +19,8 @@ const formatoHora = new Intl.DateTimeFormat("en-GB", {
 
 const invalido = (error) => ({ estado: "invalido", error })
 
+const esRepetible = (pedido) => pedido.estado === "entregado"
+
 const marcaTiempo = (pedido) => `${pedido.fecha} ${pedido.hora ?? "00:00"}`
 const numeroDePedido = (pedido) => Number(pedido.id.slice(3))
 
@@ -79,7 +81,10 @@ export async function listarDeCliente(usuario, estado) {
 
   const pedidos = await repositorio.listarPorCliente(usuario.id, estado)
 
-  return { estado: "ok", pedidos: pedidos.sort(masReciente) }
+  return {
+    estado: "ok",
+    pedidos: pedidos.sort(masReciente).map((pedido) => ({ ...pedido, repetible: esRepetible(pedido) })),
+  }
 }
 
 export async function repetir(usuario, id) {
@@ -89,7 +94,7 @@ export async function repetir(usuario, id) {
     return { estado: "no-encontrado" }
   }
 
-  if (original.estado !== "entregado") {
+  if (!esRepetible(original)) {
     return { estado: "no-repetible", error: "Solo se pueden repetir pedidos entregados." }
   }
 
@@ -114,7 +119,8 @@ export async function repetir(usuario, id) {
   const repeticion = { pedidoId: original.id, items, noDisponibles }
 
   if (noDisponibles.length > 0) {
-    repeticion.mensaje = MENSAJE_NO_DISPONIBLES
+    const nombres = noDisponibles.map((producto) => producto.nombre).join(", ")
+    repeticion.mensaje = `${MENSAJE_NO_DISPONIBLES} Sin stock: ${nombres}.`
   }
 
   return { estado: "ok", repeticion }

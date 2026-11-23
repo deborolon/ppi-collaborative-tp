@@ -8,14 +8,14 @@
     { "id": 6, "nombre": "Evelyn", "apellido": "Izaguirre", "email": "dueno2@burgerclick.com", "passwordHash": "scrypt$af75518d30ae21b9720be138302e1285$046299a22be99e7d2f1a359b8710e2ed76d7317fda5e267e5c02c4224b530ce7218fafbcf17b54fe52acfd4c5cd4efa6d7adc113e2d0ef5bb2b5f5c151ae6e47", "rol": "dueno" }
   ],
   "productos": [
-    { "id": "clasica", "nombre": "BurgerClick Clásica", "categoria": "Hamburguesas", "precio": 10200, "stock": 25, "descripcion": "Medallón de carne, cheddar, lechuga, tomate y salsa de la casa." },
-    { "id": "bacon", "nombre": "Doble Bacon", "categoria": "Hamburguesas", "precio": 14500, "stock": 12, "descripcion": "Doble medallón, doble cheddar y panceta crocante." },
-    { "id": "veggie", "nombre": "BurgerClick Veggie", "categoria": "Hamburguesas", "precio": 13500, "stock": 0, "descripcion": "Medallón de garbanzo y vegetales, con salsa vegana." },
-    { "id": "papas", "nombre": "Papas Clásicas", "categoria": "Acompañamientos", "precio": 4800, "stock": 40, "descripcion": "Porción de papas fritas con sal." },
-    { "id": "papas_cheddar", "nombre": "Papas Cheddar & Panceta", "categoria": "Acompañamientos", "precio": 6000, "stock": 8, "descripcion": "Papas con cheddar fundido y panceta." },
-    { "id": "aros", "nombre": "Aros de Cebolla", "categoria": "Acompañamientos", "precio": 4000, "stock": 20, "descripcion": "Aros de cebolla rebozados." },
-    { "id": "gaseosa", "nombre": "Gaseosa 500ml", "categoria": "Bebidas", "precio": 3500, "stock": 50, "descripcion": "Línea de gaseosas, botella de 500 ml." },
-    { "id": "agua", "nombre": "Agua Saborizada", "categoria": "Bebidas", "precio": 2500, "stock": 30, "descripcion": "Agua saborizada sin gas, 500 ml." }
+    { "id": "clasica", "imagen": "sandwich.svg", "nombre": "BurgerClick Clásica", "categoria": "Hamburguesas", "precio": 10200, "stock": 25, "descripcion": "Medallón de carne, cheddar, lechuga, tomate y salsa de la casa." },
+    { "id": "bacon", "imagen": "sandwich.svg", "nombre": "Doble Bacon", "categoria": "Hamburguesas", "precio": 14500, "stock": 12, "descripcion": "Doble medallón, doble cheddar y panceta crocante." },
+    { "id": "veggie", "imagen": "sandwich.svg", "nombre": "BurgerClick Veggie", "categoria": "Hamburguesas", "precio": 13500, "stock": 0, "descripcion": "Medallón de garbanzo y vegetales, con salsa vegana." },
+    { "id": "papas", "imagen": "french-fries.svg", "nombre": "Papas Clásicas", "categoria": "Acompañamientos", "precio": 4800, "stock": 40, "descripcion": "Porción de papas fritas con sal." },
+    { "id": "papas_cheddar", "imagen": "cheese.svg", "nombre": "Papas Cheddar & Panceta", "categoria": "Acompañamientos", "precio": 6000, "stock": 8, "descripcion": "Papas con cheddar fundido y panceta." },
+    { "id": "aros", "imagen": "onion-rings.svg", "nombre": "Aros de Cebolla", "categoria": "Acompañamientos", "precio": 4000, "stock": 20, "descripcion": "Aros de cebolla rebozados." },
+    { "id": "gaseosa", "imagen": "soda.svg", "nombre": "Gaseosa 500ml", "categoria": "Bebidas", "precio": 3500, "stock": 50, "descripcion": "Línea de gaseosas, botella de 500 ml." },
+    { "id": "agua", "imagen": "water.svg", "nombre": "Agua Saborizada", "categoria": "Bebidas", "precio": 2500, "stock": 30, "descripcion": "Agua saborizada sin gas, 500 ml." }
   ],
   "zonasEnvio": [
     { "id": "caba", "nombre": "Capital Federal", "costo": 1000, "cubierta": true },
