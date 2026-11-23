@@ -78,13 +78,16 @@ Abrí `http://localhost:3000`. Para iniciarlo sin reinicio automático, ejecutá
 | GET | `/api/zonas-envio` | Zonas de entrega con su costo de envío y si tienen cobertura (`Otra` no la tiene; retiro en local = $0) |
 | GET | `/api/usuarios` | Usuarios sin credenciales (requiere token de dueño); `401` / `403` |
 | GET | `/api/usuarios/:id` | Un usuario (requiere token de dueño); `404` si no existe |
-| GET | `/api/ingredientes` | Stock y mínimo de cada ingrediente (requiere token de cocina o dueño) |
-| GET | `/api/pedidos` | Todos los pedidos (requiere token de cocina o dueño) |
-| GET | `/api/pedidos/mios` | Historial del cliente autenticado, del más reciente al más antiguo; filtro opcional `?estado=pendiente\|preparacion\|listo\|entregado` (requiere token de cliente); `400` si el estado no es válido |
+| GET | `/api/ingredientes` | Ingredientes con `id`, stock, mínimo y `nivel` (`suficiente`, `bajo` o `agotado`) (requiere token de cocina o dueño) |
+| GET | `/api/pedidos/comandas` | Comandas activas, de la más antigua a la más reciente, con nombre de pila, hora, estado, demora y `accion` siguiente; `mensaje` si no hay ninguna (requiere token de cocina) |
+| GET | `/api/pedidos/demoras` | Pedidos activos con demora por falta de ingredientes (requiere token de dueño) |
+| GET | `/api/pedidos/propios` | Historial del cliente autenticado, del más reciente al más antiguo; filtro opcional `?estado=pendiente\|preparacion\|listo\|entregado` (requiere token de cliente); `400` si el estado no es válido |
 | GET | `/api/pedidos/:id/repetir` | Arma el carrito para repetir un pedido propio entregado: `items` disponibles y `noDisponibles` con su `mensaje` (requiere token de cliente); `404` si no existe o es ajeno, `409` si no está entregado |
-| GET | `/api/pedidos/:id` | Un pedido (requiere token de cocina o dueño); `404` si no existe |
+| PATCH | `/api/pedidos/:id/estado` | Avanza el pedido con `{ estado }` al siguiente de la secuencia `pendiente` → `preparacion` → `listo` → `entregado` (requiere token de cocina); `400` si el estado no es válido, `404` si no existe, `409` si está entregado o el estado no es el siguiente |
+| POST | `/api/pedidos/:id/demora` | Reporta una demora con `{ ingredientes: [id] }` (requiere token de cocina); `400` si no hay ingredientes o no son válidos, `404` si no existe, `409` si está entregado |
 | POST | `/api/pedidos` | Crea un pedido del cliente con `{ items: [{ productoId, cantidad }], modalidad, zonaId, direccion }` (requiere token de cliente). Calcula precios y envío en el servidor y descuenta el stock; `201` con el pedido en estado `pendiente`, `400` si los datos no son válidos o la zona está fuera de cobertura, `409` si falta stock o un precio cambió |
 | POST | `/api/auth/login` | Inicia sesión con `{ email, password }` y devuelve `{ token, usuario }`; `401` si son incorrectas, `429` si la cuenta está bloqueada |
 | POST | `/api/auth/logout` | Cierra la sesión (requiere token); `204` |
 | GET | `/api/auth/sesion` | Devuelve el usuario de la sesión vigente (requiere token); `401` si no existe o expiró |
-| GET | `/api/datos` | Datos de ejemplo usados por el frontend actual (usuarios solo con `id`, `nombre` y `rol`) |
+| GET | `/api/ventas` | Resumen del período `?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` (por defecto, hoy): pedidos por estado, facturación y ticket promedio de los entregados (requiere token de dueño); `400` si las fechas no son válidas |
+| GET | `/api/ventas/ranking` | Productos más vendidos del período, con el mismo filtro `desde` y `hasta` (requiere token de dueño); `400` si las fechas no son válidas |
