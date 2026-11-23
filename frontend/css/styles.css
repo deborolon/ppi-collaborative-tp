@@ -450,12 +450,14 @@ p {
   color: var(--rojo-oscuro);
 }
 
-.lista-credenciales,
 .lista-referencia {
   margin-left: 1.2rem;
 }
 
-.lista-credenciales li,
+.filtro-historial {
+  margin-bottom: 1rem;
+}
+
 .lista-referencia li {
   margin-bottom: 0.3rem;
 }

@@ -1,15 +1,15 @@
 import express from "express"
-import datos from "./data/datos.json" with { type: "json" }
+import { permitirOrigenes } from "./src/middlewares/cors.js"
+import { manejarErrores, rutaNoEncontrada } from "./src/middlewares/errores.js"
+import rutas from "./src/rutas/index.js"
 
 const app = express()
 
-app.get("/api/datos", (_request, response) => {
-  response.json(datos)
-})
+app.use(express.json())
 
-app.use((error, _request, response, _next) => {
-  console.error(error)
-  response.status(500).json({ error: "No se pudieron cargar los datos de la aplicación." })
-})
+app.use("/api", permitirOrigenes)
+app.use("/api", rutas)
+app.use("/api", rutaNoEncontrada)
+app.use(manejarErrores)
 
 export default app

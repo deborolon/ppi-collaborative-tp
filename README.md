@@ -2,17 +2,32 @@
 
 Prototipo web para gestionar el recorrido de compra en un local de hamburguesas: consulta del menú, creación de pedidos, seguimiento de estados y vistas de operación para cocina y administración.
 
-## Estructura monorepo
+## Tecnologías
+
+- Node.js y Express
+- HTML5, CSS3 y JavaScript, sin frameworks
+- JSON como almacenamiento de datos
+
+## Estructura
 
 ```text
 /
 ├── backend/
 │   ├── data/
 │   │   └── datos.json
-│   ├── app.js
 │   ├── netlify/
 │   │   └── functions/
 │   │       └── api.js
+│   ├── src/
+│   │   ├── controladores/
+│   │   ├── middlewares/
+│   │   │   ├── autenticacion.js
+│   │   │   ├── cors.js
+│   │   │   └── errores.js
+│   │   ├── repositorios/
+│   │   ├── rutas/
+│   │   └── servicios/
+│   ├── app.js
 │   ├── package.json
 │   ├── package-lock.json
 │   └── server.js
@@ -24,16 +39,13 @@ Prototipo web para gestionar el recorrido de compra en un local de hamburguesas:
 │   ├── js/
 │   ├── pages/
 │   └── index.html
+├── .gitignore
 ├── .nvmrc
 ├── netlify.toml
 └── README.md
 ```
 
-- **Frontend:** páginas HTML, estilos y JavaScript en `frontend/`. `frontend/assets/` contiene el logo y las ilustraciones SVG del menú y la portada.
-- **Backend:** servidor Node.js con Express en `backend/`. Sirve el frontend y expone `GET /api/datos`, que lee `backend/data/datos.json`.
-- **Datos:** por ahora se mantienen en el archivo JSON; no se utiliza una base de datos. Los pedidos y cambios locales siguen guardándose en `localStorage` del navegador.
-
-## Requisitos
+## Requisitos, instalación y ejecución
 
 - [Node.js 26.13.1 LTS](https://nodejs.org/en/download/), con npm incluido.
 
@@ -56,19 +68,23 @@ npm run dev
 
 Abrí `http://localhost:3000`. Para iniciarlo sin reinicio automático, ejecutá `npm start` desde `backend/`.
 
-## Deploy en Netlify
+## Endpoints
 
-`netlify.toml` publica `frontend/`, instala las dependencias de `backend/` y despliega la API Express como una Netlify Function. La ruta pública es `GET /api/datos`.
-
-## Funcionalidades
-
-- **Inicio (`frontend/index.html`)**: presentación del local y beneficios cargados desde los datos de ejemplo.
-- **Menú (`frontend/pages/menu.html`)**: productos agrupados por categoría, con precio y disponibilidad.
-- **Nuevo pedido (`frontend/pages/pedido.html`)**: selección de productos y cantidades, modalidad de entrega, zona y dirección.
-- **Confirmación (`frontend/pages/confirmacion.html`)**: ticket con número de pedido, productos, modalidad, demora estimada e importes.
-- **Mis pedidos (`frontend/pages/mis-pedidos.html`)**: historial del cliente, estados, total y opción para repetir una compra.
-- **Cocina (`frontend/pages/cocina.html`)**: comandas activas, estados de preparación y avisos de stock bajo.
-- **Tablero (`frontend/pages/tablero.html`)**: indicadores de facturación y pedidos, productos más vendidos e ingredientes por reponer.
-- **Inicio de sesión (`frontend/pages/login.html`)**: acceso de demostración por perfil de cliente, cocina o dueño.
-
-Las credenciales y la protección por perfiles son solo para demostración y no constituyen autenticación segura. El estado guardado en `localStorage` no se sincroniza entre navegadores.
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/health` | Estado del servicio |
+| GET | `/api/productos` | Menú completo con precio y stock |
+| GET | `/api/productos/:id` | Un producto; `404` si no existe |
+| GET | `/api/zonas-envio` | Zonas de entrega con su costo de envío y si tienen cobertura (`Otra` no la tiene; retiro en local = $0) |
+| GET | `/api/usuarios` | Usuarios sin credenciales (requiere token de dueño); `401` / `403` |
+| GET | `/api/usuarios/:id` | Un usuario (requiere token de dueño); `404` si no existe |
+| GET | `/api/ingredientes` | Stock y mínimo de cada ingrediente (requiere token de cocina o dueño) |
+| GET | `/api/pedidos` | Todos los pedidos (requiere token de cocina o dueño) |
+| GET | `/api/pedidos/mios` | Historial del cliente autenticado, del más reciente al más antiguo; filtro opcional `?estado=pendiente\|preparacion\|listo\|entregado` (requiere token de cliente); `400` si el estado no es válido |
+| GET | `/api/pedidos/:id/repetir` | Arma el carrito para repetir un pedido propio entregado: `items` disponibles y `noDisponibles` con su `mensaje` (requiere token de cliente); `404` si no existe o es ajeno, `409` si no está entregado |
+| GET | `/api/pedidos/:id` | Un pedido (requiere token de cocina o dueño); `404` si no existe |
+| POST | `/api/pedidos` | Crea un pedido del cliente con `{ items: [{ productoId, cantidad }], modalidad, zonaId, direccion }` (requiere token de cliente). Calcula precios y envío en el servidor y descuenta el stock; `201` con el pedido en estado `pendiente`, `400` si los datos no son válidos o la zona está fuera de cobertura, `409` si falta stock o un precio cambió |
+| POST | `/api/auth/login` | Inicia sesión con `{ email, password }` y devuelve `{ token, usuario }`; `401` si son incorrectas, `429` si la cuenta está bloqueada |
+| POST | `/api/auth/logout` | Cierra la sesión (requiere token); `204` |
+| GET | `/api/auth/sesion` | Devuelve el usuario de la sesión vigente (requiere token); `401` si no existe o expiró |
+| GET | `/api/datos` | Datos de ejemplo usados por el frontend actual (usuarios solo con `id`, `nombre` y `rol`) |
