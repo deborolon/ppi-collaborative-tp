@@ -15,6 +15,8 @@ Prototipo web para gestionar el recorrido de compra en un local de hamburguesas:
 │   ├── src/
 │   │   ├── controladores/
 │   │   ├── middlewares/
+│   │   │   ├── autenticacion.js
+│   │   │   ├── cors.js
 │   │   │   └── errores.js
 │   │   ├── repositorios/
 │   │   ├── rutas/
@@ -49,7 +51,7 @@ El backend sigue el patrón MVC adaptado a una API REST: la vista es el frontend
 | Rutas | `src/rutas/` | Asocian cada URL y método HTTP con un controlador. |
 | Controladores | `src/controladores/` | Reciben `req`, llaman al servicio, deciden el código de estado y responden con `res`. Sin lógica de negocio. |
 | Servicios | `src/servicios/` | Reglas de negocio: validaciones y cálculos. No conocen `req` ni `res`. |
-| Repositorios | `src/repositorios/` | Único acceso a los datos. Hoy leen `datos.json`; luego se reemplazan por MongoDB sin tocar las demás capas. |
+| Repositorios | `src/repositorios/` | Único acceso a los datos. Hoy leen `datos.json` y escriben sesiones e intentos en archivos JSON (`almacen-json.js` serializa y escribe de forma atómica); luego se reemplazan por MongoDB sin tocar las demás capas. |
 
 ## Requisitos
 
@@ -82,13 +84,34 @@ Abrí `http://localhost:3000`. Para iniciarlo sin reinicio automático, ejecutá
 | GET | `/api/productos` | Menú completo con precio y stock |
 | GET | `/api/productos/:id` | Un producto; `404` si no existe |
 | GET | `/api/zonas-envio` | Zonas de entrega y costo de envío (retiro en local = $0) |
-| GET | `/api/datos` | Datos de ejemplo completos, usados por el frontend actual |
+| GET | `/api/usuarios` | Usuarios sin credenciales (requiere token de dueño); `401` / `403` |
+| GET | `/api/usuarios/:id` | Un usuario (requiere token de dueño); `404` si no existe |
+| GET | `/api/ingredientes` | Stock y mínimo de cada ingrediente (requiere token de cocina o dueño) |
+| GET | `/api/pedidos` | Todos los pedidos (requiere token de cocina o dueño) |
+| GET | `/api/pedidos/:id` | Un pedido (requiere token de cocina o dueño); `404` si no existe |
+| POST | `/api/auth/login` | Inicia sesión con `{ email, password }` y devuelve `{ token, usuario }`; `401` si son incorrectas, `429` si la cuenta está bloqueada |
+| POST | `/api/auth/logout` | Cierra la sesión (requiere token); `204` |
+| GET | `/api/auth/sesion` | Devuelve el usuario de la sesión vigente (requiere token); `401` si no existe o expiró |
+| GET | `/api/datos` | Datos de ejemplo usados por el frontend actual (usuarios solo con `id`, `nombre` y `rol`) |
 
 Los errores se devuelven como JSON: `{ "error": "mensaje" }`.
 
+### Autenticación
+
+- La sesión es un token aleatorio que el frontend envía en `Authorization: Bearer <token>`. Se guarda en `backend/data/sesiones.json` y se cierra tras 30 minutos sin actividad.
+- Tras 4 contraseñas incorrectas seguidas, la cuenta se bloquea 15 minutos. El contador se guarda en `backend/data/intentos.json`.
+- Ambos archivos se generan al usar el login y no se versionan.
+- Las contraseñas de `datos.json` están hasheadas con scrypt. Para generar un hash: `node --input-type=module -e "import('./src/servicios/contrasenas.js').then(m => m.hashear('clave')).then(console.log)"` desde `backend/`.
+
+### CORS
+
+- La API acepta pedidos desde otros orígenes solo si están en la lista permitida. Por defecto: `http://localhost:3000` y `http://localhost:5500` (también con `127.0.0.1`).
+- Para cambiarla, definí la variable de entorno `CORS_ORIGIN` con los orígenes separados por coma, por ejemplo `CORS_ORIGIN=https://mi-sitio.netlify.app,http://localhost:5500`.
+- Con el frontend servido por el mismo servidor (o por Netlify, que redirige `/api/*`) no hace falta CORS.
+
 ## Deploy en Netlify
 
-`netlify.toml` publica `frontend/`, instala las dependencias de `backend/` y despliega la API Express como una Netlify Function.
+`netlify.toml` publica `frontend/`, instala las dependencias de `backend/` y despliega la API Express como una Netlify Function. El login necesita escribir en `backend/data/`, así que por ahora solo funciona con el servidor local (`npm start`).
 
 ## Funcionalidades
 

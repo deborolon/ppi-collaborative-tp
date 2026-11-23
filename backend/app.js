@@ -1,14 +1,13 @@
 import express from "express"
-import datos from "./data/datos.json" with { type: "json" }
+import { permitirOrigenes } from "./src/middlewares/cors.js"
 import { manejarErrores, rutaNoEncontrada } from "./src/middlewares/errores.js"
 import rutas from "./src/rutas/index.js"
 
 const app = express()
 
-app.get("/api/datos", (req, res) => {
-  res.status(200).json(datos)
-})
+app.use(express.json())
 
+app.use("/api", permitirOrigenes)
 app.use("/api", rutas)
 app.use("/api", rutaNoEncontrada)
 app.use(manejarErrores)
