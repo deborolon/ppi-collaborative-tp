@@ -10,6 +10,14 @@ export async function listar() {
   return await leer(ARCHIVO, inicial())
 }
 
+export async function listarPorCliente(clienteId, estado) {
+  const pedidos = await listar()
+
+  return pedidos.filter(
+    (pedido) => pedido.clienteId === clienteId && (estado === undefined || pedido.estado === estado)
+  )
+}
+
 export async function buscarPorId(id) {
   const pedidos = await listar()
   return pedidos.find((pedido) => pedido.id === id)

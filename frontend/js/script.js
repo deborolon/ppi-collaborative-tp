@@ -101,6 +101,11 @@ function limpiarSesionLocal() {
   localStorage.removeItem(LS.token)
 }
 
+function volverAlLogin() {
+  limpiarSesionLocal()
+  window.location.href = rutaBase() + "pages/login.html"
+}
+
 async function cerrarSesion() {
   const token = localStorage.getItem(LS.token)
   limpiarSesionLocal()
@@ -360,6 +365,10 @@ async function initPedido() {
     r.addEventListener("change", recalcular)
   )
   selectZona.addEventListener("change", recalcular)
+
+  const pedidoARepetir = new URLSearchParams(window.location.search).get("repetir")
+  if (pedidoARepetir) await precargarRepeticion(pedidoARepetir)
+
   actualizarResumen(zonasEnvio)
 
   document.getElementById("form-pedido").addEventListener("submit", async function (e) {
@@ -408,8 +417,7 @@ async function initPedido() {
     }
 
     if (respuesta && respuesta.status === 401) {
-      limpiarSesionLocal()
-      window.location.href = rutaBase() + "pages/login.html"
+      volverAlLogin()
       return
     }
 
@@ -418,6 +426,45 @@ async function initPedido() {
       "No pudimos registrar el pedido. Intentá de nuevo."
     boton.disabled = false
   })
+}
+
+function mostrarAvisoPedido(texto, clase) {
+  const aviso = document.getElementById("pedido-aviso")
+  aviso.textContent = texto
+  aviso.className = clase
+  aviso.setAttribute("role", "alert")
+}
+
+async function precargarRepeticion(pedidoId) {
+  const respuesta = await llamarApi("/pedidos/" + encodeURIComponent(pedidoId) + "/repetir")
+
+  if (respuesta.status === 401) {
+    volverAlLogin()
+    return
+  }
+
+  if (!respuesta.ok) {
+    mostrarAvisoPedido(
+      (respuesta.cuerpo && respuesta.cuerpo.error) || "No pudimos cargar el pedido anterior.",
+      "aviso aviso-error"
+    )
+    return
+  }
+
+  const { items, noDisponibles, mensaje } = respuesta.cuerpo
+  const inputs = document.querySelectorAll("#pedido-productos input[type='number']")
+
+  items.forEach((item) => {
+    const input = [...inputs].find((actual) => actual.dataset.productoId === item.productoId)
+    if (input && !input.disabled) input.value = item.cantidad
+  })
+
+  if (noDisponibles.length > 0) {
+    mostrarAvisoPedido(
+      mensaje + " Sin stock: " + noDisponibles.map((p) => p.nombre).join(", ") + ".",
+      "aviso"
+    )
+  }
 }
 
 function crearItemPedido(producto) {
@@ -538,24 +585,52 @@ function initConfirmacion() {
 
 async function initMisPedidos() {
   const contenedor = document.getElementById("historial")
-  if (!contenedor) return
+  const filtro = document.getElementById("filtro-estado")
+  if (!contenedor || !filtro) return
 
-  const usuario = getUsuarioConectado()
-  const datos = await getDatos()
-  const mios = datos.pedidos.filter((p) => usuario && p.clienteId === usuario.id)
+  Object.entries(ETIQUETA_ESTADO).forEach(([valor, texto]) => {
+    const opcion = document.createElement("option")
+    opcion.value = valor
+    opcion.textContent = texto
+    filtro.appendChild(opcion)
+  })
 
-  if (mios.length === 0) {
-    contenedor.innerHTML = "<p>Todavía no tenés pedidos. ¡Armá tu primera compra!</p>"
-    return
+  let consultaActual = 0
+
+  async function cargarHistorial() {
+    const consulta = ++consultaActual
+    const parametros = filtro.value ? "?estado=" + encodeURIComponent(filtro.value) : ""
+    const respuesta = await llamarApi("/pedidos/mios" + parametros)
+
+    if (consulta !== consultaActual) return
+
+    if (respuesta.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    contenedor.innerHTML = ""
+
+    if (!respuesta.ok) {
+      contenedor.innerHTML = "<p>No pudimos cargar tus pedidos. Intentá de nuevo en unos minutos.</p>"
+      return
+    }
+
+    if (respuesta.cuerpo.length === 0) {
+      contenedor.innerHTML = "<p>No se registran pedidos para los parámetros seleccionados.</p>"
+      return
+    }
+
+    respuesta.cuerpo.forEach((pedido) => contenedor.appendChild(crearTarjetaPedido(pedido)))
   }
 
-  mios.reverse().forEach((pedido) => contenedor.appendChild(crearTarjetaPedido(pedido)))
+  filtro.addEventListener("change", cargarHistorial)
+  await cargarHistorial()
+}
 
-  contenedor.addEventListener("click", function (e) {
-    const boton = e.target.closest("[data-repetir]")
-    if (!boton) return
-    repetirPedido(boton.dataset.repetir, usuario)
-  })
+function formatearFechaHora(pedido) {
+  const fecha = pedido.fecha.split("-").reverse().join("/")
+  return pedido.hora ? fecha + " · " + pedido.hora : fecha
 }
 
 function crearTarjetaPedido(pedido) {
@@ -574,6 +649,10 @@ function crearTarjetaPedido(pedido) {
   estado.textContent = ETIQUETA_ESTADO[pedido.estado] || pedido.estado
   body.appendChild(estado)
 
+  const fecha = document.createElement("p")
+  fecha.textContent = formatearFechaHora(pedido)
+  body.appendChild(fecha)
+
   const ul = document.createElement("ul")
   pedido.items.forEach((i) => {
     const li = document.createElement("li")
@@ -586,35 +665,16 @@ function crearTarjetaPedido(pedido) {
   total.innerHTML = "<strong>Total:</strong> " + formatearPrecio(pedido.total)
   body.appendChild(total)
 
-  const btn = document.createElement("button")
-  btn.type = "button"
-  btn.className = "btn"
-  btn.setAttribute("data-repetir", pedido.id)
-  btn.textContent = "Repetir compra"
-  body.appendChild(btn)
+  if (pedido.estado === "entregado") {
+    const repetir = document.createElement("a")
+    repetir.className = "btn"
+    repetir.href = "pedido.html?repetir=" + encodeURIComponent(pedido.id)
+    repetir.textContent = "Repetir compra"
+    body.appendChild(repetir)
+  }
 
   card.appendChild(body)
   return card
-}
-
-function repetirPedido(pedidoId, usuario) {
-  const pedidos = JSON.parse(localStorage.getItem(LS.pedidos))
-  const original = pedidos.find((p) => p.id === pedidoId)
-  if (!original) return
-
-  const copia = {
-    ...original,
-    id: "BC-" + Math.floor(1000 + Math.random() * 9000),
-    clienteId: usuario ? usuario.id : original.clienteId,
-    estado: "pendiente",
-    fecha: new Date().toISOString().slice(0, 10),
-    esperaMin: 15,
-    items: original.items.map((i) => ({ ...i })),
-  }
-
-  pedidos.push(copia)
-  guardarPedidos(pedidos)
-  window.location.reload()
 }
 
 async function initCocina() {

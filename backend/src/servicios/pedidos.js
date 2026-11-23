@@ -4,12 +4,26 @@ import * as zonasEnvio from "./zonas-envio.js"
 
 const ESPERA_MINUTOS = 15
 const MAXIMO_DIRECCION = 200
+const ZONA_HORARIA = "America/Argentina/Buenos_Aires"
+const ESTADOS = ["pendiente", "preparacion", "listo", "entregado"]
+const MENSAJE_NO_DISPONIBLES = "Uno o más productos del pedido original no están disponibles actualmente."
 
-const formatoFecha = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "America/Argentina/Buenos_Aires",
+const formatoFecha = new Intl.DateTimeFormat("en-CA", { timeZone: ZONA_HORARIA })
+const formatoHora = new Intl.DateTimeFormat("en-GB", {
+  timeZone: ZONA_HORARIA,
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
 })
 
 const invalido = (error) => ({ estado: "invalido", error })
+
+const marcaTiempo = (pedido) => `${pedido.fecha} ${pedido.hora ?? "00:00"}`
+const numeroDePedido = (pedido) => Number(pedido.id.slice(3))
+
+function masReciente(a, b) {
+  return marcaTiempo(b).localeCompare(marcaTiempo(a)) || numeroDePedido(b) - numeroDePedido(a)
+}
 
 function esItemValido(item) {
   return (
@@ -51,6 +65,54 @@ export async function listar() {
 
 export async function obtener(id) {
   return await repositorio.buscarPorId(id)
+}
+
+export async function listarDeCliente(usuario, estado) {
+  if (estado !== undefined && !ESTADOS.includes(estado)) {
+    return invalido("El estado indicado no es válido.")
+  }
+
+  const pedidos = await repositorio.listarPorCliente(usuario.id, estado)
+
+  return { estado: "ok", pedidos: pedidos.sort(masReciente) }
+}
+
+export async function repetir(usuario, id) {
+  const original = await repositorio.buscarPorId(id)
+
+  if (!original || original.clienteId !== usuario.id) {
+    return { estado: "no-encontrado" }
+  }
+
+  if (original.estado !== "entregado") {
+    return { estado: "no-repetible", error: "Solo se pueden repetir pedidos entregados." }
+  }
+
+  const items = []
+  const noDisponibles = []
+
+  for (const item of original.items) {
+    const producto = await productos.obtener(item.productoId)
+
+    if (producto && producto.stock >= item.cantidad) {
+      items.push({
+        productoId: producto.id,
+        nombre: producto.nombre,
+        cantidad: item.cantidad,
+        precio: producto.precio,
+      })
+    } else {
+      noDisponibles.push({ productoId: item.productoId, nombre: item.nombre })
+    }
+  }
+
+  const repeticion = { pedidoId: original.id, items, noDisponibles }
+
+  if (noDisponibles.length > 0) {
+    repeticion.mensaje = MENSAJE_NO_DISPONIBLES
+  }
+
+  return { estado: "ok", repeticion }
 }
 
 export async function crear(usuario, solicitud) {
@@ -119,6 +181,7 @@ export async function crear(usuario, solicitud) {
   }
 
   const subtotal = lineas.reduce((suma, linea) => suma + linea.precio * linea.cantidad, 0)
+  const ahora = new Date()
 
   try {
     const pedido = await repositorio.crear({
@@ -131,7 +194,8 @@ export async function crear(usuario, solicitud) {
       subtotal,
       total: subtotal + entrega.costoEnvio,
       estado: "pendiente",
-      fecha: formatoFecha.format(new Date()),
+      fecha: formatoFecha.format(ahora),
+      hora: formatoHora.format(ahora),
       esperaMin: ESPERA_MINUTOS,
     })
 
