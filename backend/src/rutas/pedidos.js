@@ -8,7 +8,7 @@ const cocina = [autenticar, autorizar("cocina")]
 const dueno = [autenticar, autorizar("dueno")]
 
 rutas.post("/", cliente, controlador.crear)
-rutas.get("/mios", cliente, controlador.listarPropios)
+rutas.get("/propios", cliente, controlador.listarPropios)
 rutas.get("/comandas", cocina, controlador.listarComandas)
 rutas.get("/demoras", dueno, controlador.listarDemoras)
 rutas.get("/:id/repetir", cliente, controlador.repetir)

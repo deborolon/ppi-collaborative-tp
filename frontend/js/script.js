@@ -528,7 +528,7 @@ async function initMisPedidos() {
   async function cargarHistorial() {
     const consulta = ++consultaActual
     const parametros = filtro.value ? "?estado=" + encodeURIComponent(filtro.value) : ""
-    const respuesta = await llamarApi("/pedidos/mios" + parametros)
+    const respuesta = await llamarApi("/pedidos/propios" + parametros)
 
     if (consulta !== consultaActual) return
 
