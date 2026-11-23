@@ -1,5 +1,6 @@
 import * as repositorio from "../repositorios/pedidos.js"
 import { fechaDe, horaDe } from "./fechas.js"
+import * as ingredientes from "./ingredientes.js"
 import * as productos from "./productos.js"
 import * as usuarios from "./usuarios.js"
 import * as zonasEnvio from "./zonas-envio.js"
@@ -17,6 +18,7 @@ const MENSAJE_NO_DISPONIBLES = "Uno o más productos del pedido original no est�
 const MENSAJE_FUERA_DE_COBERTURA = "La dirección ingresada se encuentra fuera de la zona de cobertura"
 const MENSAJE_SIN_COMANDAS = "No hay comandas pendientes en este momento"
 const MENSAJE_ENTREGADO = "El pedido ya fue entregado y no puede modificarse"
+const MENSAJE_DEMORA_ENTREGADO = "No se pueden reportar demoras en pedidos ya entregados"
 
 const invalido = (error) => ({ estado: "invalido", error })
 
@@ -28,6 +30,9 @@ const accionDe = (pedido) => {
 }
 
 const nombreDePila = (nombre) => nombre.split(" ")[0]
+
+const nombresDe = (catalogo, ids) =>
+  catalogo.filter((ingrediente) => ids.includes(ingrediente.id)).map((ingrediente) => ingrediente.nombre)
 
 const marcaTiempo = (pedido) => `${pedido.fecha} ${pedido.hora ?? "00:00"}`
 const numeroDePedido = (pedido) => Number(pedido.id.slice(3))
@@ -83,7 +88,11 @@ export async function obtener(id) {
 }
 
 export async function listarComandas() {
-  const [pedidos, clientes] = await Promise.all([repositorio.listar(), usuarios.listar()])
+  const [pedidos, clientes, catalogo] = await Promise.all([
+    repositorio.listar(),
+    usuarios.listar(),
+    ingredientes.listar(),
+  ])
   const nombres = new Map(clientes.map((cliente) => [cliente.id, nombreDePila(cliente.nombre)]))
 
   const comandas = pedidos
@@ -96,6 +105,7 @@ export async function listarComandas() {
       hora: pedido.hora ?? null,
       estado: pedido.estado,
       esperaMin: pedido.esperaMin,
+      demora: pedido.demora ? { ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) } : null,
       accion: accionDe(pedido),
     }))
 
@@ -126,6 +136,40 @@ export async function actualizarEstado(id, estadoNuevo) {
   })
 
   return resultado ?? { estado: "no-encontrado" }
+}
+
+export async function reportarDemora(id, faltantes) {
+  const catalogo = await ingredientes.listar()
+  const disponibles = catalogo.map((ingrediente) => ingrediente.id)
+
+  if (!Array.isArray(faltantes) || faltantes.length === 0) {
+    return invalido("Indicá al menos un ingrediente faltante.")
+  }
+
+  if (!faltantes.every((id) => disponibles.includes(id))) {
+    return invalido("Los ingredientes indicados no son válidos.")
+  }
+
+  const resultado = await repositorio.actualizar(id, (pedido) => {
+    if (pedido.estado === "entregado") {
+      return { estado: "entregado", error: MENSAJE_DEMORA_ENTREGADO }
+    }
+
+    pedido.demora = { ingredientes: disponibles.filter((id) => faltantes.includes(id)) }
+
+    return { estado: "ok", demora: { ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) } }
+  })
+
+  return resultado ?? { estado: "no-encontrado" }
+}
+
+export async function listarDemoras() {
+  const [pedidos, catalogo] = await Promise.all([repositorio.listar(), ingredientes.listar()])
+
+  return pedidos
+    .filter((pedido) => pedido.demora && pedido.estado !== "entregado")
+    .sort((a, b) => masReciente(b, a))
+    .map((pedido) => ({ id: pedido.id, ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) }))
 }
 
 export async function listarDeCliente(usuario, estado) {

@@ -702,11 +702,25 @@ function crearComanda(comanda) {
   espera.innerHTML = "<strong>Espera:</strong> " + comanda.esperaMin + " min"
   articulo.appendChild(espera)
 
+  if (comanda.demora) {
+    const demora = document.createElement("p")
+    demora.className = "aviso aviso-error"
+    demora.textContent = "Demora por falta de: " + comanda.demora.ingredientes.join(", ")
+    articulo.appendChild(demora)
+  }
+
   if (comanda.accion) {
     articulo.appendChild(
       botonCocina(comanda.id, comanda.accion.estado, comanda.accion.texto, CLASE_BOTON_ESTADO[comanda.accion.estado])
     )
   }
+
+  const reportar = document.createElement("button")
+  reportar.type = "button"
+  reportar.className = "btn btn-claro btn-cocina"
+  reportar.dataset.demora = comanda.id
+  reportar.textContent = "Reportar demora"
+  articulo.appendChild(reportar)
 
   return articulo
 }
@@ -725,6 +739,9 @@ async function initCocina() {
   const contenedor = document.getElementById("comandas")
   if (!contenedor) return
 
+  const dialogo = document.getElementById("dialogo-demora")
+  const formulario = document.getElementById("form-demora")
+  let pedidoConDemora = null
   let consultaActual = 0
   let vistaActual = ""
 
@@ -771,10 +788,21 @@ async function initCocina() {
   if (ingredientes.ok) {
     renderAvisoStock(ingredientes.cuerpo)
 
+    const opciones = document.getElementById("demora-ingredientes")
+    ingredientes.cuerpo.forEach((ingrediente) => {
+      const etiqueta = document.createElement("label")
+      const casilla = document.createElement("input")
+      casilla.type = "checkbox"
+      casilla.value = ingrediente.id
+      etiqueta.appendChild(casilla)
+      etiqueta.append(" " + ingrediente.nombre)
+      opciones.appendChild(etiqueta)
+    })
   }
 
   contenedor.addEventListener("click", async function (e) {
     const avance = e.target.closest("button[data-estado]")
+    const demora = e.target.closest("button[data-demora]")
 
     if (avance) {
       avance.disabled = true
@@ -795,7 +823,40 @@ async function initCocina() {
       )
       await cargarComandas()
     }
+
+    if (demora) {
+      pedidoConDemora = demora.dataset.demora
+      document.getElementById("demora-titulo").textContent = "Demora en el pedido #" + pedidoConDemora
+      formulario.reset()
+      mostrarAviso("demora-aviso", "", "")
+      dialogo.showModal()
+    }
   })
+
+  formulario.addEventListener("submit", async function (e) {
+    e.preventDefault()
+
+    const faltantes = [...formulario.querySelectorAll("input:checked")].map((casilla) => casilla.value)
+    const respuesta = await llamarApi(
+      "/pedidos/" + encodeURIComponent(pedidoConDemora) + "/demora",
+      { method: "POST", body: JSON.stringify({ ingredientes: faltantes }) }
+    )
+
+    if (respuesta.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    if (!respuesta.ok) {
+      mostrarAviso("demora-aviso", mensajeDeError(respuesta, "No pudimos enviar el aviso."), "aviso aviso-error")
+      return
+    }
+
+    dialogo.close()
+    await cargarComandas()
+  })
+
+  document.getElementById("demora-cancelar").addEventListener("click", () => dialogo.close())
 
   await cargarComandas()
   setInterval(cargarComandas, INTERVALO_ACTUALIZACION_MS)
@@ -804,6 +865,32 @@ async function initCocina() {
 async function initTablero() {
   const contenedor = document.getElementById("tablero")
   if (!contenedor) return
+
+  async function cargarDemoras() {
+    const respuesta = await llamarApi("/pedidos/demoras")
+
+    if (respuesta.status === 401) {
+      volverAlLogin()
+      return
+    }
+
+    const seccion = document.getElementById("seccion-demoras")
+    const lista = document.getElementById("demoras")
+    lista.innerHTML = ""
+
+    if (!respuesta.ok || respuesta.cuerpo.length === 0) {
+      seccion.style.display = "none"
+      return
+    }
+
+    respuesta.cuerpo.forEach((demora) => {
+      const li = document.createElement("li")
+      li.className = "critico"
+      li.textContent = "Pedido " + demora.id + " — falta: " + demora.ingredientes.join(", ")
+      lista.appendChild(li)
+    })
+    seccion.style.display = ""
+  }
 
   const datos = await getDatos()
   const activos = datos.pedidos.filter((p) => p.estado !== "cancelado")
@@ -844,6 +931,9 @@ async function initTablero() {
       listaStock.appendChild(li)
     })
   }
+
+  await cargarDemoras()
+  setInterval(cargarDemoras, INTERVALO_ACTUALIZACION_MS)
 }
 
 async function iniciar() {

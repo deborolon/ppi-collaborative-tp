@@ -42,6 +42,20 @@
       <div class="comandas" id="comandas"></div>
     </section>
 
+    <dialog id="dialogo-demora">
+      <form id="form-demora">
+        <h2 id="demora-titulo"></h2>
+        <fieldset id="demora-ingredientes">
+          <legend>Ingredientes faltantes</legend>
+        </fieldset>
+        <div id="demora-aviso" role="alert"></div>
+        <div class="acciones-dialogo">
+          <button type="submit" class="btn">Enviar aviso</button>
+          <button type="button" class="btn btn-claro" id="demora-cancelar">Cancelar</button>
+        </div>
+      </form>
+    </dialog>
+
     <section class="seccion">
       <h2>Estados de las comandas</h2>
       <ul class="lista-referencia semaforo">
