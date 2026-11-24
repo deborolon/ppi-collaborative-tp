@@ -8,8 +8,8 @@ const MAXIMO_FALLIDOS = 3
 const BLOQUEO_MS = 15 * 60 * 1000
 const INACTIVIDAD_MS = 30 * 60 * 1000
 
-function datosPublicos({ id, nombre, apellido, rol }) {
-  return { id, nombre, apellido, rol }
+function datosPublicos({ _id, nombre, apellido, rol }) {
+  return { _id, nombre, apellido, rol }
 }
 
 export async function iniciarSesion(email, password) {
@@ -20,14 +20,14 @@ export async function iniciarSesion(email, password) {
   }
 
   const ahora = Date.now()
-  const { bloqueadoHasta } = await intentos.obtener(usuario.id)
+  const { bloqueadoHasta } = await intentos.obtener(usuario._id)
 
   if (bloqueadoHasta && bloqueadoHasta > ahora) {
     return { estado: "bloqueada", bloqueadoHasta }
   }
 
   if (!(await verificar(password, usuario.passwordHash))) {
-    const estado = await intentos.actualizar(usuario.id, (actual) => {
+    const estado = await intentos.actualizar(usuario._id, (actual) => {
       if (actual.bloqueadoHasta && actual.bloqueadoHasta > ahora) {
         return actual
       }
@@ -43,11 +43,11 @@ export async function iniciarSesion(email, password) {
       : { estado: "credenciales-invalidas" }
   }
 
-  await intentos.reiniciar(usuario.id)
+  await intentos.reiniciar(usuario._id)
   await sesiones.eliminarInactivas(ahora - INACTIVIDAD_MS)
 
   const token = randomBytes(32).toString("hex")
-  await sesiones.crear({ token, usuarioId: usuario.id, ultimaActividad: ahora })
+  await sesiones.crear({ token, usuarioId: usuario._id, ultimaActividad: ahora })
 
   return { estado: "ok", token, usuario: datosPublicos(usuario) }
 }

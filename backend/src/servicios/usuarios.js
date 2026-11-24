@@ -10,6 +10,6 @@ export async function listar() {
 }
 
 export async function obtener(id) {
-  const usuario = await repositorio.buscarPorId(Number(id))
+  const usuario = await repositorio.buscarPorId(id)
   return usuario && sinCredenciales(usuario)
 }

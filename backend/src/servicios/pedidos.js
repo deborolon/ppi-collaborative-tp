@@ -32,13 +32,14 @@ const accionDe = (pedido) => {
 const nombreDePila = (nombre) => nombre.split(" ")[0]
 
 const nombresDe = (catalogo, ids) =>
-  catalogo.filter((ingrediente) => ids.includes(ingrediente.id)).map((ingrediente) => ingrediente.nombre)
+  catalogo
+    .filter((ingrediente) => ids.some((id) => id.equals(ingrediente._id)))
+    .map((ingrediente) => ingrediente.nombre)
 
 const marcaTiempo = (pedido) => `${pedido.fecha} ${pedido.hora ?? "00:00"}`
-const numeroDePedido = (pedido) => Number(pedido.id.slice(3))
 
 function masReciente(a, b) {
-  return marcaTiempo(b).localeCompare(marcaTiempo(a)) || numeroDePedido(b) - numeroDePedido(a)
+  return marcaTiempo(b).localeCompare(marcaTiempo(a)) || b._id.toString().localeCompare(a._id.toString())
 }
 
 function esItemValido(item) {
@@ -53,12 +54,12 @@ function esItemValido(item) {
 
 async function resolverEntrega(modalidad, zonaId, direccion) {
   if (modalidad === "takeaway") {
-    return { zonaId: "takeaway", direccion: "", costoEnvio: 0 }
+    return { zonaId: null, direccion: "", costoEnvio: 0 }
   }
 
   const zona = typeof zonaId === "string" ? await zonasEnvio.obtener(zonaId) : undefined
 
-  if (!zona || zona.id === "takeaway") {
+  if (!zona) {
     return { error: "Elegí una zona de envío válida." }
   }
 
@@ -76,7 +77,7 @@ async function resolverEntrega(modalidad, zonaId, direccion) {
     return { error: "La dirección de entrega es demasiado larga." }
   }
 
-  return { zonaId: zona.id, direccion: direccionLimpia, costoEnvio: zona.costo }
+  return { zonaId: zona._id, direccion: direccionLimpia, costoEnvio: zona.costo }
 }
 
 export async function listarComandas() {
@@ -85,14 +86,14 @@ export async function listarComandas() {
     usuarios.listar(),
     ingredientes.listar(),
   ])
-  const nombres = new Map(clientes.map((cliente) => [cliente.id, nombreDePila(cliente.nombre)]))
+  const nombres = new Map(clientes.map((cliente) => [cliente._id.toString(), nombreDePila(cliente.nombre)]))
 
   const comandas = pedidos
     .filter((pedido) => pedido.estado !== "entregado")
     .sort((a, b) => masReciente(b, a))
     .map((pedido) => ({
-      id: pedido.id,
-      nombre: nombres.get(pedido.clienteId) ?? "Cliente",
+      _id: pedido._id,
+      nombre: nombres.get(pedido.clienteId.toString()) ?? "Cliente",
       items: pedido.items.map(({ nombre, cantidad }) => ({ nombre, cantidad })),
       hora: pedido.hora ?? null,
       estado: pedido.estado,
@@ -124,7 +125,7 @@ export async function actualizarEstado(id, estadoNuevo) {
     pedido.estado = estadoNuevo
     pedido.esperaMin = ESPERA_POR_ESTADO[estadoNuevo]
 
-    return { estado: "ok", pedido: { id: pedido.id, estado: pedido.estado, esperaMin: pedido.esperaMin } }
+    return { estado: "ok", pedido: { _id: pedido._id, estado: pedido.estado, esperaMin: pedido.esperaMin } }
   })
 
   return resultado ?? { estado: "no-encontrado" }
@@ -132,7 +133,7 @@ export async function actualizarEstado(id, estadoNuevo) {
 
 export async function reportarDemora(id, faltantes) {
   const catalogo = await ingredientes.listar()
-  const disponibles = catalogo.map((ingrediente) => ingrediente.id)
+  const disponibles = catalogo.map((ingrediente) => ingrediente._id.toString())
 
   if (!Array.isArray(faltantes) || faltantes.length === 0) {
     return invalido("Indicá al menos un ingrediente faltante.")
@@ -147,7 +148,11 @@ export async function reportarDemora(id, faltantes) {
       return { estado: "entregado", error: MENSAJE_DEMORA_ENTREGADO }
     }
 
-    pedido.demora = { ingredientes: disponibles.filter((id) => faltantes.includes(id)) }
+    pedido.demora = {
+      ingredientes: catalogo
+        .filter((ingrediente) => faltantes.includes(ingrediente._id.toString()))
+        .map((ingrediente) => ingrediente._id),
+    }
 
     return { estado: "ok", demora: { ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) } }
   })
@@ -161,7 +166,7 @@ export async function listarDemoras() {
   return pedidos
     .filter((pedido) => pedido.demora && pedido.estado !== "entregado")
     .sort((a, b) => masReciente(b, a))
-    .map((pedido) => ({ id: pedido.id, ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) }))
+    .map((pedido) => ({ _id: pedido._id, ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) }))
 }
 
 export async function listarDeCliente(usuario, estado) {
@@ -169,7 +174,7 @@ export async function listarDeCliente(usuario, estado) {
     return invalido("El estado indicado no es válido.")
   }
 
-  const pedidos = await repositorio.listarPorCliente(usuario.id, estado)
+  const pedidos = await repositorio.listarPorCliente(usuario._id, estado)
 
   return {
     estado: "ok",
@@ -180,7 +185,7 @@ export async function listarDeCliente(usuario, estado) {
 export async function repetir(usuario, id) {
   const original = await repositorio.buscarPorId(id)
 
-  if (!original || original.clienteId !== usuario.id) {
+  if (!original || !original.clienteId.equals(usuario._id)) {
     return { estado: "no-encontrado" }
   }
 
@@ -196,7 +201,7 @@ export async function repetir(usuario, id) {
 
     if (producto && producto.stock >= item.cantidad) {
       items.push({
-        productoId: producto.id,
+        productoId: producto._id,
         nombre: producto.nombre,
         cantidad: item.cantidad,
         precio: producto.precio,
@@ -206,7 +211,7 @@ export async function repetir(usuario, id) {
     }
   }
 
-  const repeticion = { pedidoId: original.id, items, noDisponibles }
+  const repeticion = { pedidoId: original._id, items, noDisponibles }
 
   if (noDisponibles.length > 0) {
     const nombres = noDisponibles.map((producto) => producto.nombre).join(", ")
@@ -253,13 +258,13 @@ export async function crear(usuario, solicitud) {
       }
     }
 
-    const existente = lineas.find((linea) => linea.productoId === producto.id)
+    const existente = lineas.find((linea) => linea.productoId.equals(producto._id))
 
     if (existente) {
       existente.cantidad += item.cantidad
     } else {
       lineas.push({
-        productoId: producto.id,
+        productoId: producto._id,
         nombre: producto.nombre,
         cantidad: item.cantidad,
         precio: producto.precio,
@@ -286,7 +291,7 @@ export async function crear(usuario, solicitud) {
 
   try {
     const pedido = await repositorio.crear({
-      clienteId: usuario.id,
+      clienteId: usuario._id,
       items: lineas,
       modalidad,
       zonaId: entrega.zonaId,

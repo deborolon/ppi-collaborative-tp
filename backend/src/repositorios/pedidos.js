@@ -1,41 +1,39 @@
-import { fileURLToPath } from "node:url"
-import datos from "../../data/datos.json" with { type: "json" }
-import { leer, modificar } from "./almacen-json.js"
-
-const ARCHIVO = fileURLToPath(new URL("../../data/pedidos.json", import.meta.url))
-
-const inicial = () => structuredClone(datos.pedidos)
+import { ObjectId } from "mongodb"
+import { coleccion, enTransaccion } from "../db.js"
 
 export async function listar() {
-  return await leer(ARCHIVO, inicial())
+  return await coleccion("pedidos").find().sort({ _id: 1 }).toArray()
 }
 
 export async function listarPorCliente(clienteId, estado) {
-  const pedidos = await listar()
+  const filtro = estado === undefined ? { clienteId } : { clienteId, estado }
 
-  return pedidos.filter(
-    (pedido) => pedido.clienteId === clienteId && (estado === undefined || pedido.estado === estado)
-  )
+  return await coleccion("pedidos").find(filtro).sort({ _id: 1 }).toArray()
 }
 
 export async function buscarPorId(id) {
-  const pedidos = await listar()
-  return pedidos.find((pedido) => pedido.id === id)
+  return await coleccion("pedidos").findOne({ _id: new ObjectId(id) })
 }
 
 export async function actualizar(id, cambiar) {
-  return await modificar(ARCHIVO, inicial(), (pedidos) => {
-    const pedido = pedidos.find((actual) => actual.id === id)
-    return pedido ? cambiar(pedido) : undefined
+  const pedidos = coleccion("pedidos")
+  const _id = new ObjectId(id)
+
+  return await enTransaccion(async (session) => {
+    const pedido = await pedidos.findOne({ _id }, { session })
+
+    if (!pedido) {
+      return undefined
+    }
+
+    const resultado = await cambiar(pedido)
+    await pedidos.replaceOne({ _id }, pedido, { session })
+
+    return resultado
   })
 }
 
 export async function crear(pedido) {
-  return await modificar(ARCHIVO, inicial(), (pedidos) => {
-    const ultimo = Math.max(0, ...pedidos.map((actual) => Number(actual.id.slice(3))))
-    const nuevo = { id: `BC-${ultimo + 1}`, ...pedido }
-
-    pedidos.push(nuevo)
-    return nuevo
-  })
+  await coleccion("pedidos").insertOne(pedido)
+  return pedido
 }

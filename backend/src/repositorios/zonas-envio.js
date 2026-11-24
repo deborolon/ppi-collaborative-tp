@@ -1,9 +1,10 @@
-import datos from "../../data/datos.json" with { type: "json" }
+import { ObjectId } from "mongodb"
+import { coleccion } from "../db.js"
 
 export async function listar() {
-  return datos.zonasEnvio
+  return await coleccion("zonas_envio").find().sort({ _id: 1 }).toArray()
 }
 
 export async function buscarPorId(id) {
-  return datos.zonasEnvio.find((zona) => zona.id === id)
+  return await coleccion("zonas_envio").findOne({ _id: new ObjectId(id) })
 }
