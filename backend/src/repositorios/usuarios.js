@@ -1,5 +1,4 @@
-import { ObjectId } from "mongodb"
-import { coleccion } from "../db.js"
+import { aObjectId, coleccion } from "../db.js"
 
 const COLACION_EMAIL = { locale: "en", strength: 2 }
 
@@ -12,5 +11,7 @@ export async function buscarPorEmail(email) {
 }
 
 export async function buscarPorId(id) {
-  return await coleccion("usuarios").findOne({ _id: new ObjectId(id) })
+  const _id = aObjectId(id)
+
+  return _id ? await coleccion("usuarios").findOne({ _id }) : undefined
 }

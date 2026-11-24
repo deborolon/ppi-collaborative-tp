@@ -24,11 +24,6 @@ function resolverPeriodo(desde, hasta) {
   return periodo
 }
 
-async function pedidosDelPeriodo({ desde, hasta }) {
-  const pedidos = await repositorio.listar()
-  return pedidos.filter((pedido) => pedido.fecha >= desde && pedido.fecha <= hasta)
-}
-
 export async function resumir(desde, hasta) {
   const periodo = resolverPeriodo(desde, hasta)
 
@@ -36,7 +31,7 @@ export async function resumir(desde, hasta) {
     return invalido(periodo.error)
   }
 
-  const pedidos = await pedidosDelPeriodo(periodo)
+  const pedidos = await repositorio.listarPorFecha(periodo.desde, periodo.hasta)
   const entregados = pedidos.filter((pedido) => pedido.estado === "entregado")
   const facturacion = entregados.reduce((suma, pedido) => suma + pedido.total, 0)
 
@@ -71,7 +66,7 @@ export async function rankear(desde, hasta, categoria) {
   }
 
   const categoriaPorProducto = new Map(catalogo.map((producto) => [producto._id.toString(), producto.categoria]))
-  const pedidos = await pedidosDelPeriodo(periodo)
+  const pedidos = await repositorio.listarPorFecha(periodo.desde, periodo.hasta)
   const unidades = new Map()
 
   for (const pedido of pedidos.filter((actual) => actual.estado === "entregado")) {

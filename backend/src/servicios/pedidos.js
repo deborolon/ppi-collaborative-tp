@@ -82,14 +82,13 @@ async function resolverEntrega(modalidad, zonaId, direccion) {
 
 export async function listarComandas() {
   const [pedidos, clientes, catalogo] = await Promise.all([
-    repositorio.listar(),
+    repositorio.listarActivos(),
     usuarios.listar(),
     ingredientes.listar(),
   ])
   const nombres = new Map(clientes.map((cliente) => [cliente._id.toString(), nombreDePila(cliente.nombre)]))
 
   const comandas = pedidos
-    .filter((pedido) => pedido.estado !== "entregado")
     .sort((a, b) => masReciente(b, a))
     .map((pedido) => ({
       _id: pedido._id,
@@ -161,10 +160,9 @@ export async function reportarDemora(id, faltantes) {
 }
 
 export async function listarDemoras() {
-  const [pedidos, catalogo] = await Promise.all([repositorio.listar(), ingredientes.listar()])
+  const [pedidos, catalogo] = await Promise.all([repositorio.listarConDemora(), ingredientes.listar()])
 
   return pedidos
-    .filter((pedido) => pedido.demora && pedido.estado !== "entregado")
     .sort((a, b) => masReciente(b, a))
     .map((pedido) => ({ _id: pedido._id, ingredientes: nombresDe(catalogo, pedido.demora.ingredientes) }))
 }
@@ -272,10 +270,28 @@ export async function crear(usuario, solicitud) {
     }
   }
 
-  const reserva = await productos.descontarStock(lineas)
+  const subtotal = lineas.reduce((suma, linea) => suma + linea.precio * linea.cantidad, 0)
+  const ahora = new Date()
+
+  const pedido = {
+    clienteId: usuario._id,
+    items: lineas,
+    modalidad,
+    zonaId: entrega.zonaId,
+    direccion: entrega.direccion,
+    costoEnvio: entrega.costoEnvio,
+    subtotal,
+    total: subtotal + entrega.costoEnvio,
+    estado: "pendiente",
+    fecha: fechaDe(ahora),
+    hora: horaDe(ahora),
+    esperaMin: ESPERA_MINUTOS,
+  }
+
+  const reserva = await repositorio.crearDescontandoStock(pedido)
 
   if (!reserva.ok) {
-    const { nombre, stock } = reserva.producto
+    const { nombre, stock } = await productos.obtener(reserva.productoId)
 
     return {
       estado: "sin-stock",
@@ -286,28 +302,5 @@ export async function crear(usuario, solicitud) {
     }
   }
 
-  const subtotal = lineas.reduce((suma, linea) => suma + linea.precio * linea.cantidad, 0)
-  const ahora = new Date()
-
-  try {
-    const pedido = await repositorio.crear({
-      clienteId: usuario._id,
-      items: lineas,
-      modalidad,
-      zonaId: entrega.zonaId,
-      direccion: entrega.direccion,
-      costoEnvio: entrega.costoEnvio,
-      subtotal,
-      total: subtotal + entrega.costoEnvio,
-      estado: "pendiente",
-      fecha: fechaDe(ahora),
-      hora: horaDe(ahora),
-      esperaMin: ESPERA_MINUTOS,
-    })
-
-    return { estado: "ok", pedido }
-  } catch (error) {
-    await productos.reponerStock(lineas)
-    throw error
-  }
+  return { estado: "ok", pedido }
 }
