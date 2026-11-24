@@ -1,14 +1,7 @@
-import { randomBytes, scrypt, timingSafeEqual } from "node:crypto"
+import { scrypt, timingSafeEqual } from "node:crypto"
 import { promisify } from "node:util"
 
 const derivar = promisify(scrypt)
-const LONGITUD_HASH = 64
-
-export async function hashear(password) {
-  const sal = randomBytes(16)
-  const hash = await derivar(password, sal, LONGITUD_HASH)
-  return `scrypt$${sal.toString("hex")}$${hash.toString("hex")}`
-}
 
 export async function verificar(password, almacenado) {
   const [algoritmo, sal, hash] = almacenado.split("$")

@@ -342,9 +342,17 @@ async function initPedido() {
           zonaId: selectZona.value,
           direccion: document.getElementById("direccion").value,
         }),
+        signal: AbortSignal.timeout(2000),
       })
     } catch (excepcion) {
       console.error(excepcion)
+
+      if (excepcion.name === "TimeoutError") {
+        error.textContent =
+          "La confirmación está demorando más de lo esperado. Tus datos se conservaron; revisá Mis pedidos antes de reintentar."
+        boton.disabled = false
+        return
+      }
     }
 
     if (respuesta && respuesta.ok) {
