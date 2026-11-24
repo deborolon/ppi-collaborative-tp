@@ -361,9 +361,6 @@ p {
   color: var(--blanco);
 }
 
-.estado-entregado { background: var(--verde); }
-.estado-preparacion { background: var(--amarillo); color: var(--oscuro); }
-
 .comandas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
@@ -392,8 +389,9 @@ p {
 .comanda.verde { background: var(--verde-suave); border-color: var(--verde); }
 
 .btn-cocina {
-  font-size: 1rem;
-  padding: 0.8rem 1rem;
+  font-size: 1.3rem;
+  padding: 1.1rem 1rem;
+  min-height: 4rem;
   width: 100%;
   margin-top: 0.5rem;
 }
