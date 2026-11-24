@@ -1,8 +1,24 @@
-import { ObjectId } from "mongodb"
-import { coleccion, enTransaccion } from "../db.js"
+import { aObjectId, coleccion, enTransaccion } from "../db.js"
 
-export async function listar() {
-  return await coleccion("pedidos").find().sort({ _id: 1 }).toArray()
+export async function listarActivos() {
+  return await coleccion("pedidos")
+    .find({ estado: { $ne: "entregado" } })
+    .sort({ _id: 1 })
+    .toArray()
+}
+
+export async function listarConDemora() {
+  return await coleccion("pedidos")
+    .find({ demora: { $ne: null }, estado: { $ne: "entregado" } })
+    .sort({ _id: 1 })
+    .toArray()
+}
+
+export async function listarPorFecha(desde, hasta) {
+  return await coleccion("pedidos")
+    .find({ fecha: { $gte: desde, $lte: hasta } })
+    .sort({ _id: 1 })
+    .toArray()
 }
 
 export async function listarPorCliente(clienteId, estado) {
@@ -12,12 +28,18 @@ export async function listarPorCliente(clienteId, estado) {
 }
 
 export async function buscarPorId(id) {
-  return await coleccion("pedidos").findOne({ _id: new ObjectId(id) })
+  const _id = aObjectId(id)
+
+  return _id ? await coleccion("pedidos").findOne({ _id }) : undefined
 }
 
 export async function actualizar(id, cambiar) {
   const pedidos = coleccion("pedidos")
-  const _id = new ObjectId(id)
+  const _id = aObjectId(id)
+
+  if (!_id) {
+    return undefined
+  }
 
   return await enTransaccion(async (session) => {
     const pedido = await pedidos.findOne({ _id }, { session })
@@ -33,7 +55,26 @@ export async function actualizar(id, cambiar) {
   })
 }
 
-export async function crear(pedido) {
-  await coleccion("pedidos").insertOne(pedido)
-  return pedido
+export async function crearDescontandoStock(pedido) {
+  const productos = coleccion("productos")
+  const pedidos = coleccion("pedidos")
+
+  return await enTransaccion(async (session) => {
+    for (const { productoId, cantidad } of pedido.items) {
+      const { modifiedCount } = await productos.updateOne(
+        { _id: productoId, stock: { $gte: cantidad } },
+        { $inc: { stock: -cantidad } },
+        { session }
+      )
+
+      if (modifiedCount === 0) {
+        await session.abortTransaction()
+        return { ok: false, productoId }
+      }
+    }
+
+    await pedidos.insertOne(pedido, { session })
+
+    return { ok: true }
+  })
 }
