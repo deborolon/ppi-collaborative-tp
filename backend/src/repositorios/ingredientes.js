@@ -1,5 +1,5 @@
-import datos from "../../data/datos.json" with { type: "json" }
+import { coleccion } from "../db.js"
 
 export async function listar() {
-  return datos.ingredientes
+  return await coleccion("ingredientes").find().sort({ _id: 1 }).toArray()
 }

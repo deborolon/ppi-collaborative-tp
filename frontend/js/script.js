@@ -25,6 +25,10 @@ function formatearPrecio(valor) {
   return "$" + valor.toLocaleString("es-AR")
 }
 
+function numeroDePedido(id) {
+  return id.slice(-6).toUpperCase()
+}
+
 async function llamarApi(ruta, opciones = {}) {
   const token = localStorage.getItem(LS.token)
   const encabezados = {}
@@ -299,14 +303,12 @@ async function initPedido() {
   })
 
   const selectZona = document.getElementById("zona")
-  zonasEnvio
-    .filter((z) => z.id !== "takeaway")
-    .forEach((z) => {
-      const opt = document.createElement("option")
-      opt.value = z.id
-      opt.textContent = z.costo === null ? z.nombre : z.nombre + " — " + formatearPrecio(z.costo)
-      selectZona.appendChild(opt)
-    })
+  zonasEnvio.forEach((z) => {
+    const opt = document.createElement("option")
+    opt.value = z._id
+    opt.textContent = z.costo === null ? z.nombre : z.nombre + " — " + formatearPrecio(z.costo)
+    selectZona.appendChild(opt)
+  })
 
   const recalcular = () => actualizarResumen(zonasEnvio)
   contenedor.addEventListener("input", recalcular)
@@ -337,7 +339,7 @@ async function initPedido() {
         body: JSON.stringify({
           items,
           modalidad,
-          zonaId: modalidad === "delivery" ? selectZona.value : "takeaway",
+          zonaId: selectZona.value,
           direccion: document.getElementById("direccion").value,
         }),
       })
@@ -407,7 +409,7 @@ function crearItemPedido(producto) {
   campo.className = "campo"
 
   const label = document.createElement("label")
-  label.setAttribute("for", producto.id)
+  label.setAttribute("for", producto._id)
   label.textContent = producto.nombre + " — " + formatearPrecio(producto.precio)
 
   if (agotado) {
@@ -420,11 +422,11 @@ function crearItemPedido(producto) {
 
   const input = document.createElement("input")
   input.type = "number"
-  input.id = producto.id
+  input.id = producto._id
   input.min = "0"
   input.value = "0"
   input.dataset.precio = producto.precio
-  input.dataset.productoId = producto.id
+  input.dataset.productoId = producto._id
   if (agotado) input.disabled = true
 
   campo.appendChild(label)
@@ -458,7 +460,7 @@ function actualizarResumen(zonasEnvio) {
 
   let costoEnvio = 0
   if (modalidad === "delivery") {
-    const zona = zonasEnvio.find((z) => z.id === selectZona.value)
+    const zona = zonasEnvio.find((z) => z._id === selectZona.value)
     costoEnvio = (zona && zona.costo) || 0
     selectZona.disabled = false
     if (campoDireccion) campoDireccion.style.display = ""
@@ -482,7 +484,7 @@ function initConfirmacion() {
     return
   }
 
-  document.getElementById("ticket-numero").textContent = pedido.id
+  document.getElementById("ticket-numero").textContent = numeroDePedido(pedido._id)
   document.getElementById("ticket-demora").textContent = pedido.esperaMin + " min"
 
   const lista = document.getElementById("ticket-items")
@@ -569,7 +571,7 @@ function crearTarjetaPedido(pedido) {
   body.className = "card-body"
 
   const h3 = document.createElement("h3")
-  h3.textContent = "Pedido " + pedido.id
+  h3.textContent = "Pedido " + numeroDePedido(pedido._id)
   body.appendChild(h3)
 
   const estado = document.createElement("span")
@@ -596,7 +598,7 @@ function crearTarjetaPedido(pedido) {
   if (pedido.repetible) {
     const repetir = document.createElement("a")
     repetir.className = "btn"
-    repetir.href = "pedido.html?repetir=" + encodeURIComponent(pedido.id)
+    repetir.href = "pedido.html?repetir=" + encodeURIComponent(pedido._id)
     repetir.textContent = "Repetir compra"
     body.appendChild(repetir)
   }
@@ -652,7 +654,7 @@ function crearComanda(comanda) {
   articulo.className = "comanda " + (COLOR_ESTADO[comanda.estado] || "")
 
   const titulo = document.createElement("h3")
-  titulo.textContent = "#" + comanda.id + " · " + comanda.nombre
+  titulo.textContent = "#" + numeroDePedido(comanda._id) + " · " + comanda.nombre
   articulo.appendChild(titulo)
 
   const estado = document.createElement("p")
@@ -687,14 +689,14 @@ function crearComanda(comanda) {
 
   if (comanda.accion) {
     articulo.appendChild(
-      botonCocina(comanda.id, comanda.accion.estado, comanda.accion.texto, CLASE_BOTON_ESTADO[comanda.accion.estado])
+      botonCocina(comanda._id, comanda.accion.estado, comanda.accion.texto, CLASE_BOTON_ESTADO[comanda.accion.estado])
     )
   }
 
   const reportar = document.createElement("button")
   reportar.type = "button"
   reportar.className = "btn btn-claro btn-cocina"
-  reportar.dataset.demora = comanda.id
+  reportar.dataset.demora = comanda._id
   reportar.textContent = "Reportar demora"
   articulo.appendChild(reportar)
 
@@ -769,7 +771,7 @@ async function initCocina() {
       const etiqueta = document.createElement("label")
       const casilla = document.createElement("input")
       casilla.type = "checkbox"
-      casilla.value = ingrediente.id
+      casilla.value = ingrediente._id
       etiqueta.appendChild(casilla)
       etiqueta.append(" " + ingrediente.nombre)
       opciones.appendChild(etiqueta)
@@ -802,7 +804,8 @@ async function initCocina() {
 
     if (demora) {
       pedidoConDemora = demora.dataset.demora
-      document.getElementById("demora-titulo").textContent = "Demora en el pedido #" + pedidoConDemora
+      document.getElementById("demora-titulo").textContent =
+        "Demora en el pedido #" + numeroDePedido(pedidoConDemora)
       formulario.reset()
       mostrarAviso("demora-aviso", "", "")
       dialogo.showModal()
@@ -935,7 +938,7 @@ async function initTablero() {
     respuesta.cuerpo.forEach((demora) => {
       const li = document.createElement("li")
       li.className = "critico"
-      li.textContent = "Pedido " + demora.id + " — falta: " + demora.ingredientes.join(", ")
+      li.textContent = "Pedido " + numeroDePedido(demora._id) + " — falta: " + demora.ingredientes.join(", ")
       lista.appendChild(li)
     })
     seccion.style.display = ""

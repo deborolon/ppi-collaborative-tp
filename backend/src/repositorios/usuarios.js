@@ -1,15 +1,16 @@
-import datos from "../../data/datos.json" with { type: "json" }
+import { ObjectId } from "mongodb"
+import { coleccion } from "../db.js"
+
+const COLACION_EMAIL = { locale: "en", strength: 2 }
 
 export async function listar() {
-  return datos.usuarios
+  return await coleccion("usuarios").find().sort({ _id: 1 }).toArray()
 }
 
 export async function buscarPorEmail(email) {
-  return datos.usuarios.find(
-    (usuario) => usuario.email.toLowerCase() === email.toLowerCase()
-  )
+  return await coleccion("usuarios").findOne({ email }, { collation: COLACION_EMAIL })
 }
 
 export async function buscarPorId(id) {
-  return datos.usuarios.find((usuario) => usuario.id === id)
+  return await coleccion("usuarios").findOne({ _id: new ObjectId(id) })
 }

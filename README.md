@@ -6,15 +6,13 @@ Prototipo web para gestionar el recorrido de compra en un local de hamburguesas:
 
 - Node.js y Express
 - HTML5, CSS3 y JavaScript, sin frameworks
-- JSON como almacenamiento de datos
+- MongoDB Atlas como base de datos
 
 ## Estructura
 
 ```text
 /
 ├── backend/
-│   ├── data/
-│   │   └── datos.json
 │   ├── netlify/
 │   │   └── functions/
 │   │       └── api.js
@@ -26,7 +24,8 @@ Prototipo web para gestionar el recorrido de compra en un local de hamburguesas:
 │   │   │   └── errores.js
 │   │   ├── repositorios/
 │   │   ├── rutas/
-│   │   └── servicios/
+│   │   ├── servicios/
+│   │   └── db.js
 │   ├── app.js
 │   ├── package.json
 │   ├── package-lock.json
@@ -58,11 +57,23 @@ npm --version
 
 `node --version` debería mostrar `v26.13.1`.
 
-Instalá las dependencias e iniciá el servidor desde `backend/`:
+Instalá las dependencias desde `backend/`:
 
 ```cmd
 cd backend
 npm install
+```
+
+Creá `backend/.env` (ignorado por git) con la conexión a MongoDB Atlas:
+
+```text
+MONGODB_URI=mongodb+srv://<usuario>:<contraseña>@<cluster>.mongodb.net/
+MONGODB_DB=burgerclick
+```
+
+Iniciá el servidor:
+
+```cmd
 npm run dev
 ```
 

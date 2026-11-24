@@ -1,46 +1,39 @@
-import { fileURLToPath } from "node:url"
-import datos from "../../data/datos.json" with { type: "json" }
-import { leer, modificar } from "./almacen-json.js"
-
-const ARCHIVO = fileURLToPath(new URL("../../data/productos.json", import.meta.url))
-
-const inicial = () => structuredClone(datos.productos)
+import { ObjectId } from "mongodb"
+import { coleccion, enTransaccion } from "../db.js"
 
 export async function listar() {
-  return await leer(ARCHIVO, inicial())
+  return await coleccion("productos").find().sort({ _id: 1 }).toArray()
 }
 
 export async function buscarPorId(id) {
-  const productos = await listar()
-  return productos.find((producto) => producto.id === id)
+  return await coleccion("productos").findOne({ _id: new ObjectId(id) })
 }
 
 export async function descontarStock(lineas) {
-  return await modificar(ARCHIVO, inicial(), (productos) => {
-    for (const { productoId, cantidad } of lineas) {
-      const producto = productos.find((actual) => actual.id === productoId)
+  const productos = coleccion("productos")
 
-      if (!producto || producto.stock < cantidad) {
-        return { ok: false, producto }
+  const faltante = await enTransaccion(async (session) => {
+    for (const { productoId, cantidad } of lineas) {
+      const { modifiedCount } = await productos.updateOne(
+        { _id: productoId, stock: { $gte: cantidad } },
+        { $inc: { stock: -cantidad } },
+        { session }
+      )
+
+      if (modifiedCount === 0) {
+        await session.abortTransaction()
+        return productoId
       }
     }
-
-    for (const { productoId, cantidad } of lineas) {
-      productos.find((actual) => actual.id === productoId).stock -= cantidad
-    }
-
-    return { ok: true }
   })
+
+  return faltante === undefined ? { ok: true } : { ok: false, producto: await buscarPorId(faltante) }
 }
 
 export async function reponerStock(lineas) {
-  await modificar(ARCHIVO, inicial(), (productos) => {
-    for (const { productoId, cantidad } of lineas) {
-      const producto = productos.find((actual) => actual.id === productoId)
+  const productos = coleccion("productos")
 
-      if (producto) {
-        producto.stock += cantidad
-      }
-    }
-  })
+  for (const { productoId, cantidad } of lineas) {
+    await productos.updateOne({ _id: productoId }, { $inc: { stock: cantidad } })
+  }
 }
